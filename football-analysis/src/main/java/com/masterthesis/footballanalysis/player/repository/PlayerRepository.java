@@ -14,7 +14,7 @@ public class PlayerRepository {
     private final JdbcTemplate jdbcTemplate;
 
     public void getPlayer() {
-        String sql = "SELECT * FROM players WHERE playerId=?";
+        String sql = "SELECT * FROM players";
 
         List<Player> players = jdbcTemplate.query(sql,
                 BeanPropertyRowMapper.newInstance(Player.class));

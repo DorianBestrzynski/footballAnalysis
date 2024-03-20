@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class PlayerController {
     private final PlayerService playerService;
 
-    @GetMapping()
-    public void getPlayer(@RequestParam Long playerId) {
+    @GetMapping
+    public ResponseEntity<String> getPlayer(@RequestParam Long playerId) {
         playerService.getPlayer(playerId);
+        return ResponseEntity.ok("OK");
     }
 }
