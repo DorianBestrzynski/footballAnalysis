@@ -1,15 +1,12 @@
 package com.masterthesis.footballanalysis.player.repository;
 
 import com.masterthesis.footballanalysis.player.dto.Player;
-import com.masterthesis.footballanalysis.player.dto.PlayerGoals;
+import com.masterthesis.footballanalysis.player.dto.TopScorers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 
 @Repository
@@ -25,16 +22,21 @@ public class PlayerRepository {
         System.out.println(players);
     }
 
-    public List<PlayerGoals> getPlayerGoals(Long playerId) {
-        String query = "SELECT p.playername as playerName, g.gameid as gameId, " +
-                "t.teamname as teamName, COUNT(s.shotid) as goals " +
-                "FROM Players p " +
-                "JOIN Shots s ON p.playerid = s.playerid AND s.shotresult='GOAL'" +
-                "JOIN Games g ON s.gameid = g.gameid " +
-                "JOIN TeamStats ts ON g.gameid = ts.game_id AND p.teamid = ts.teamid " +
-                "WHERE p.playerid = ? AND ts.result = 'W'" +
-                "JOIN Teams t ON t.teamid=ts.teamid " +
-                "GROUP BY p.player_name, g.game_id, t.team_name;";
-        return jdbcTemplate.queryForList(query, PlayerGoals.class, playerId);
+    public List<TopScorers> getTopScorersInAllLeagues() {
+        String query = "SELECT l.name AS LeagueName, p.name AS PlayerName, SUM(a.goals) AS TotalGoals, SUM(a.assists) AS TotalAssists " +
+                "FROM appearances a " +
+                "JOIN players p ON a.playerid = p.playerID " +
+                "JOIN games g ON a.gameid = g.gameID " +
+                "JOIN leagues l ON g.leagueID = l.leagueID " +
+                "GROUP BY l.name, p.name " +
+                "ORDER BY TotalGoals DESC, TotalAssists DESC";
+       return jdbcTemplate.query(query, (rs, rowNum) -> {
+           TopScorers scorer = new TopScorers();
+           scorer.setLeagueName(rs.getString("LeagueName"));
+           scorer.setPlayerName(rs.getString("PlayerName"));
+           scorer.setTotalGoals(rs.getLong("TotalGoals"));
+           scorer.setTotalAssists(rs.getLong("TotalAssists"));
+           return scorer;
+       });
     }
 }

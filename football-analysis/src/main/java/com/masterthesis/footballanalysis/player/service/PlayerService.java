@@ -1,6 +1,6 @@
 package com.masterthesis.footballanalysis.player.service;
 
-import com.masterthesis.footballanalysis.player.dto.PlayerGoals;
+import com.masterthesis.footballanalysis.player.dto.TopScorers;
 import com.masterthesis.footballanalysis.player.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ public class PlayerService {
         playerRepository.getPlayer();
     }
 
-    public List<PlayerGoals> getPlayerGoalsInWonGames(Long playerId) {
-        return playerRepository.getPlayerGoals(playerId);
+    public List<TopScorers> getTopScorersInAllLeagues() {
+        return playerRepository.getTopScorersInAllLeagues();
     }
 }

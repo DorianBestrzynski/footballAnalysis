@@ -1,7 +1,6 @@
 package com.masterthesis.footballanalysis.player.controller;
 
-import com.masterthesis.footballanalysis.player.dto.Player;
-import com.masterthesis.footballanalysis.player.dto.PlayerGoals;
+import com.masterthesis.footballanalysis.player.dto.TopScorers;
 import com.masterthesis.footballanalysis.player.service.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +23,9 @@ public class PlayerController {
         return ResponseEntity.ok("OK");
     }
 
-    @GetMapping("/goal-details")
-    public ResponseEntity<List<PlayerGoals>> getPlayerGoalsInWonGames(@RequestParam Long playerId) {
-        var playerGoals = playerService.getPlayerGoalsInWonGames(playerId);
+    @GetMapping("/top-scorers")
+    public ResponseEntity<List<TopScorers>> getTopScorersInAllLeagues() {
+        var playerGoals = playerService.getTopScorersInAllLeagues();
         return ResponseEntity.ok(playerGoals);
     }
 }
