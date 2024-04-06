@@ -3,10 +3,10 @@ package com.masterthesis.footballanalysis.player.dto;
 import lombok.Data;
 
 @Data
-public class TopScorers {
+public class TopScorersMongo {
     private Integer season;
     private String leagueName;
     private String playerName;
-    private Long totalGoals;
-    private Long totalAssists;
+    private Integer totalGoals;
+    private Integer totalAssists;
 }

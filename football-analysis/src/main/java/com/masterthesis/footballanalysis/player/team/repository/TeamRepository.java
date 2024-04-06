@@ -1,7 +1,5 @@
 package com.masterthesis.footballanalysis.player.team.repository;
 
-
-import com.masterthesis.footballanalysis.player.dto.TopScorers;
 import com.masterthesis.footballanalysis.player.team.dto.GameStats;
 import com.masterthesis.footballanalysis.player.team.dto.TeamStat;
 import lombok.RequiredArgsConstructor;

@@ -2,9 +2,18 @@ version: '3.1'
 services:
   postgres:
     image: postgres
-    mem_limit: 512m
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: football_db
     ports:
       - "5432:5432"
+  mongoDb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports: 
+      - "27017:27017"
+

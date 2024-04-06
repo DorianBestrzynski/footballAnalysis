@@ -2,6 +2,7 @@ package com.masterthesis.footballanalysis.player.team.controller;
 
 import com.masterthesis.footballanalysis.player.dto.TopScorers;
 import com.masterthesis.footballanalysis.player.team.dto.GameStats;
+import com.masterthesis.footballanalysis.player.team.dto.GameStatsMongo;
 import com.masterthesis.footballanalysis.player.team.dto.TeamStat;
 import com.masterthesis.footballanalysis.player.team.service.TeamService;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +18,15 @@ import java.util.List;
 public class TeamController {
     private final TeamService teamService;
 
-    @GetMapping("/intense-matches")
-    public ResponseEntity<List<GameStats>> getMostIntenseMatches() {
-        var gameStats = teamService.getMostIntenseMatches();
+    @GetMapping("/pg/intense-matches")
+    public ResponseEntity<List<GameStats>> getMostIntenseMatchesPg() {
+        var gameStats = teamService.getMostIntenseMatchesPg();
+        return ResponseEntity.ok(gameStats);
+    }
+
+    @GetMapping("/mongo/intense-matches")
+    public ResponseEntity<List<GameStatsMongo>> getMostIntenseMatchesMongo() {
+        var gameStats = teamService.getMostIntenseMatchesMongo();
         return ResponseEntity.ok(gameStats);
     }
 

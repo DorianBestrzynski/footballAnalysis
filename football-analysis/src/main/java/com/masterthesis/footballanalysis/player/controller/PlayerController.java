@@ -1,6 +1,9 @@
 package com.masterthesis.footballanalysis.player.controller;
 
+import com.masterthesis.footballanalysis.player.dto.PlayerShots;
+import com.masterthesis.footballanalysis.player.dto.PlayerShotsMongo;
 import com.masterthesis.footballanalysis.player.dto.TopScorers;
+import com.masterthesis.footballanalysis.player.dto.TopScorersMongo;
 import com.masterthesis.footballanalysis.player.service.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +26,27 @@ public class PlayerController {
         return ResponseEntity.ok("OK");
     }
 
-    @GetMapping("/top-scorers")
-    public ResponseEntity<List<TopScorers>> getTopScorersInAllLeagues() {
-        var playerGoals = playerService.getTopScorersInAllLeagues();
+    @GetMapping("/pg/top-scorers")
+    public ResponseEntity<List<TopScorers>> getTopScorersInAllLeaguesPg() {
+        var playerGoals = playerService.getTopScorersInAllLeaguesPg();
         return ResponseEntity.ok(playerGoals);
+    }
+
+    @GetMapping("/mongo/top-scorers")
+    public ResponseEntity<List<TopScorersMongo>> getTopScorersInAllLeaguesMongo() {
+        var playerGoals = playerService.getTopScorersInAllLeaguesMongo();
+        return ResponseEntity.ok(playerGoals);
+    }
+
+    @GetMapping("/pg/shots")
+    public ResponseEntity<List<PlayerShots>> getShotsPg() {
+        var playerShots = playerService.getShotsPg();
+        return ResponseEntity.ok(playerShots);
+    }
+
+    @GetMapping("/mongo/shots")
+    public ResponseEntity<List<PlayerShotsMongo>> getShotsMongo() {
+        var playerShots = playerService.getShotsMongo();
+        return ResponseEntity.ok(playerShots);
     }
 }
