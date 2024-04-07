@@ -7,8 +7,10 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 
 @Repository
@@ -68,5 +70,28 @@ public class TeamRepository {
                 return teamStatsList.size();
             }
         });
+    }
+
+    public void createTeamStat(TeamStat teamStat) {
+        String sql = "INSERT INTO team_stats (gameID, teamID, season, date, location, goals, xGoals, shots, shotsOnTarget, deep, ppda, fouls, corners, yellowCards, redCards, result) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        jdbcTemplate.update(sql,
+                teamStat.getGameID(),
+                teamStat.getTeamID(),
+                teamStat.getSeason(),
+                new Timestamp(teamStat.getDate().getTime()), // Assuming getDate() returns a java.util.Date
+                String.valueOf(teamStat.getLocation()), // Assuming location is stored as a char or String
+                teamStat.getGoals(),
+                teamStat.getExpectedGoals(), // Assuming getExpectedGoals() returns a float or double
+                teamStat.getShots(),
+                teamStat.getShotsOnTarget(),
+                teamStat.getDeep(),
+                teamStat.getPpda(), // Assuming getPpda() returns a float or double
+                teamStat.getFouls(),
+                teamStat.getCorners(),
+                teamStat.getYellowCards(), // Assuming getYellowCards() returns an integer
+                teamStat.getRedCards(),
+                String.valueOf(teamStat.getResult()) // Assuming getResult() returns a char or String
+        );
     }
 }

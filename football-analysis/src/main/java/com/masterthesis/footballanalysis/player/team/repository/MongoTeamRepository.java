@@ -1,14 +1,25 @@
 package com.masterthesis.footballanalysis.player.team.repository;
 
 import com.masterthesis.footballanalysis.player.team.dto.GameStatsMongo;
+import com.masterthesis.footballanalysis.player.team.dto.MongoBulkStats;
+import com.masterthesis.footballanalysis.player.team.dto.TeamStatMongo;
 import com.mongodb.client.*;
+import com.mongodb.client.model.*;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import com.mongodb.client.MongoCollection;
+
+import static com.mongodb.client.model.Aggregates.*;
+import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Updates.*;
+import static com.mongodb.client.model.Updates.set;
 
 @Repository
 @RequiredArgsConstructor
@@ -49,5 +60,90 @@ public class MongoTeamRepository {
         }
 
         return gameStatsList;
+    }
+
+    public void updateTeamStats(TeamStatMongo newStats) {
+        int seasonYear = newStats.getSeason();
+        int gameID = newStats.getGameID();
+        var leagueID = newStats.getLeagueId();
+
+        MongoCollection<Document> collection = database.getCollection("stats");
+
+        // Perform the update
+        collection.updateOne(filters(leagueID, seasonYear, gameID), update(newStats, collection), new UpdateOptions().upsert(true).arrayFilters(arrayFilters(seasonYear, gameID)));
+    }
+
+    public MongoBulkStats updateTeamStatsBatch(List<TeamStatMongo> teamStatsList) {
+        MongoCollection<Document> collection = database.getCollection("stats");
+        List<UpdateOneModel<Document>> updates = new ArrayList<>();
+
+        for (TeamStatMongo teamStat : teamStatsList) {
+            int leagueID = teamStat.getLeagueId();
+            int seasonYear = teamStat.getSeason();
+            int gameID = teamStat.getGameID();
+
+            updates.add(new UpdateOneModel<>(filters(leagueID, seasonYear, gameID), update(teamStat, collection), new UpdateOptions().upsert(true).arrayFilters(arrayFilters(seasonYear, gameID))));
+        }
+
+        var options = new BulkWriteOptions().ordered(false); // Set to false to continue processing writes if one fails
+        var result = collection.bulkWrite(updates, options);
+        return new MongoBulkStats(result.getInsertedCount(), result.getMatchedCount(), result.getDeletedCount());
+    }
+
+
+    private Bson update(TeamStatMongo newStats, MongoCollection<Document> collection) {
+        var teamStatPath = teamStatPath(newStats, collection);
+        return combine(
+                set(teamStatPath + ".date", newStats.getDate()),
+                set(teamStatPath + ".location", newStats.getLocation()),
+                set(teamStatPath + ".goals", newStats.getGoals()),
+                set(teamStatPath + ".xGoals", newStats.getExpectedGoals()),
+                set(teamStatPath + ".shots", newStats.getShots()),
+                set(teamStatPath + ".shotsOnTarget", newStats.getShotsOnTarget()),
+                set(teamStatPath + ".deep", newStats.getDeep()),
+                set(teamStatPath + ".ppda", newStats.getPpda()),
+                set(teamStatPath + ".fouls", newStats.getFouls()),
+                set(teamStatPath + ".corners", newStats.getCorners()),
+                set(teamStatPath + ".yellowCards", newStats.getYellowCards()),
+                set(teamStatPath + ".redCards", newStats.getRedCards()),
+                set(teamStatPath + ".result", newStats.getResult())
+        );
+    }
+
+    private String teamStatPath(TeamStatMongo teamStat, MongoCollection<Document> collection) {
+        return "seasons.$[s].games.$[g]." + (isHomeTeam(teamStat, collection) ? "homeTeam" : "awayTeam") + ".teamStats";
+    }
+
+    private boolean isHomeTeam(TeamStatMongo newStats,  MongoCollection<Document> collection) {
+        // Aggregation pipeline to determine if the team is home or away
+        var pipeline = Arrays.asList(
+                match(and(eq("leagueID", newStats.getLeagueId()), eq("seasons.season", newStats.getSeason()))),
+                unwind("$seasons"),
+                unwind("$seasons.games"),
+                match(eq("seasons.games.gameID", newStats.getGameID())),
+                addFields(new Field<>("isHomeTeam", new Document("$eq", Arrays.asList("$seasons.games.homeTeam.teamID", newStats.getTeamID()))))
+        );
+
+        // Execute the aggregation pipeline
+        var cursor = collection.aggregate(pipeline).iterator();
+        if (cursor.hasNext()) {
+            Document doc = cursor.next();
+            return doc.getBoolean("isHomeTeam", false);
+        }
+        throw new RuntimeException("Insufficient data in games");
+    }
+
+    private Bson filters(int leagueID, int seasonYear, int gameID) {
+        return Filters.and(
+                Filters.eq("leagueID", leagueID),
+                Filters.eq("seasons.season", seasonYear),
+                Filters.eq("seasons.games.gameID", gameID));
+    }
+
+    private List<Bson> arrayFilters(int seasonYear, int gameID) {
+        return List.of(
+                Filters.eq("s.season", seasonYear),
+                Filters.eq("g.gameID", gameID)
+        );
     }
 }

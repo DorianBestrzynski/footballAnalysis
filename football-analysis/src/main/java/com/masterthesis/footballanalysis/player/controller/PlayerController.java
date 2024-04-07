@@ -1,16 +1,11 @@
 package com.masterthesis.footballanalysis.player.controller;
 
-import com.masterthesis.footballanalysis.player.dto.PlayerShots;
-import com.masterthesis.footballanalysis.player.dto.PlayerShotsMongo;
-import com.masterthesis.footballanalysis.player.dto.TopScorers;
-import com.masterthesis.footballanalysis.player.dto.TopScorersMongo;
+import com.masterthesis.footballanalysis.player.dto.*;
 import com.masterthesis.footballanalysis.player.service.PlayerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -44,9 +39,45 @@ public class PlayerController {
         return ResponseEntity.ok(playerShots);
     }
 
+    @GetMapping("/pg/assists")
+    public ResponseEntity<List<PlayerAssistsStats>> getPlayersAssistsPg() {
+        var playerAssists = playerService.getPlayerAssistsStatsPg();
+        return ResponseEntity.ok(playerAssists);
+    }
+
+    @GetMapping("/mongo/assists")
+    public ResponseEntity<List<PlayerAssistsStats>> getPlayersAssistsMongo() {
+        var playerAssists = playerService.getPlayerAssistsStatsMongo();
+        return ResponseEntity.ok(playerAssists);
+    }
+
     @GetMapping("/mongo/shots")
     public ResponseEntity<List<PlayerShotsMongo>> getShotsMongo() {
         var playerShots = playerService.getShotsMongo();
         return ResponseEntity.ok(playerShots);
+    }
+
+    @PostMapping("/mongo/player")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createPlayerMongo(@RequestBody Player player) {
+        playerService.createPlayer(player);
+    }
+
+    @PostMapping("/pg/player")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createPlayerPg(@RequestBody Player player) {
+        playerService.createPlayerAppearance(player);
+    }
+
+    @PostMapping("/pg/players")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createPlayersPg(@RequestBody List<Player> players) {
+        playerService.createPlayersAppearances(players);
+    }
+
+    @PostMapping("/mongo/players")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createPlayers(@RequestBody List<Player> players) {
+        playerService.createPlayers(players);
     }
 }

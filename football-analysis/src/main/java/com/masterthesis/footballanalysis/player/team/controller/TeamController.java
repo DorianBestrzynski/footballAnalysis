@@ -1,9 +1,7 @@
 package com.masterthesis.footballanalysis.player.team.controller;
 
 import com.masterthesis.footballanalysis.player.dto.TopScorers;
-import com.masterthesis.footballanalysis.player.team.dto.GameStats;
-import com.masterthesis.footballanalysis.player.team.dto.GameStatsMongo;
-import com.masterthesis.footballanalysis.player.team.dto.TeamStat;
+import com.masterthesis.footballanalysis.player.team.dto.*;
 import com.masterthesis.footballanalysis.player.team.service.TeamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,9 +28,27 @@ public class TeamController {
         return ResponseEntity.ok(gameStats);
     }
 
-    @PostMapping("/stats")
+    @PostMapping("/pg/stats")
     @ResponseStatus(code = HttpStatus.CREATED)
-    public void createTeamStats(@RequestBody List<TeamStat> teamStats) {
-        teamService.createTeamStats(teamStats);
+    public void createTeamStatsPg(@RequestBody List<TeamStat> teamStats) {
+        teamService.createTeamStatsPg(teamStats);
+    }
+
+    @PostMapping("/pg/stat")
+    @ResponseStatus(code = HttpStatus.CREATED)
+    public void createTeamStatPg(@RequestBody TeamStat teamStat) {
+        teamService.createTeamStatPg(teamStat);
+    }
+
+    @PostMapping("/mongo/stat")
+    @ResponseStatus(code = HttpStatus.CREATED)
+    public void createTeamStatsMongo(@RequestBody TeamStatMongo teamStat) {
+        teamService.createTeamStatMongo(teamStat);
+    }
+
+    @PostMapping("/mongo/stats")
+    public ResponseEntity<MongoBulkStats> createTeamStatsMongo(@RequestBody List<TeamStatMongo> teamStats) {
+        var bulkStats = teamService.createTeamStatsMongo(teamStats);
+        return new ResponseEntity<>(bulkStats, HttpStatus.CREATED);
     }
 }

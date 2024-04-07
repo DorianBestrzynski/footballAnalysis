@@ -1,8 +1,6 @@
 package com.masterthesis.footballanalysis.player.team.service;
 
-import com.masterthesis.footballanalysis.player.team.dto.GameStats;
-import com.masterthesis.footballanalysis.player.team.dto.GameStatsMongo;
-import com.masterthesis.footballanalysis.player.team.dto.TeamStat;
+import com.masterthesis.footballanalysis.player.team.dto.*;
 import com.masterthesis.footballanalysis.player.team.repository.MongoTeamRepository;
 import com.masterthesis.footballanalysis.player.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +25,20 @@ public class TeamService {
 
 
     @Transactional
-    public void createTeamStats(List<TeamStat> teamStats) {
+    public void createTeamStatsPg(List<TeamStat> teamStats) {
         teamRepository.createTeamStats(teamStats);
+    }
+
+    @Transactional
+    public void createTeamStatPg(TeamStat teamStat) {
+        teamRepository.createTeamStat(teamStat);
+    }
+
+    public void createTeamStatMongo(TeamStatMongo teamStat) {
+        mongoTeamRepository.updateTeamStats(teamStat);
+    }
+
+    public MongoBulkStats createTeamStatsMongo(List<TeamStatMongo> teamStats) {
+        return mongoTeamRepository.updateTeamStatsBatch(teamStats);
     }
 }
