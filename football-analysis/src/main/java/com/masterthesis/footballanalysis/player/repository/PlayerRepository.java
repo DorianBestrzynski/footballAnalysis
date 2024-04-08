@@ -196,7 +196,6 @@ public class PlayerRepository {
                 batchArgs.add(appearanceValues);
             }
         }
-
         jdbcTemplate.batchUpdate(sql, batchArgs);
     }
 }

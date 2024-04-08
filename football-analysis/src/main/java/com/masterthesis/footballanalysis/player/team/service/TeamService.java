@@ -23,6 +23,18 @@ public class TeamService {
         return mongoTeamRepository.getMostIntenseMatches();
     }
 
+    public List<TeamGoalsPerLeagueAndSeason> getGoalsStatsPerLeagueAndSeasonPg() {
+        return teamRepository.getGoalsStatsPerLeagueAndSeason();
+    }
+
+    public List<TeamGoalsPerLeagueAndSeason> getGoalsStatsPerLeagueAndSeasonMongo() {
+        return mongoTeamRepository.getGoalsStatsPerLeagueAndSeason();
+    }
+
+    public List<GoalsInMatch> getGoalsInMatch() {
+        return mongoTeamRepository.goalsInMatch();
+    }
+
 
     @Transactional
     public void createTeamStatsPg(List<TeamStat> teamStats) {

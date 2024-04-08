@@ -1,8 +1,6 @@
 package com.masterthesis.footballanalysis.player.team.repository;
 
-import com.masterthesis.footballanalysis.player.team.dto.GameStatsMongo;
-import com.masterthesis.footballanalysis.player.team.dto.MongoBulkStats;
-import com.masterthesis.footballanalysis.player.team.dto.TeamStatMongo;
+import com.masterthesis.footballanalysis.player.team.dto.*;
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +58,102 @@ public class MongoTeamRepository {
         }
 
         return gameStatsList;
+    }
+
+    public List<GoalsInMatch> goalsInMatch() {
+        // Get the collection you want to query
+        MongoCollection<Document> collection = database.getCollection("stats");
+
+        // Define your aggregation pipeline
+        List<Document> pipeline = Arrays.asList(new Document("$unwind", "$seasons"),
+                new Document("$unwind", "$seasons.games"),
+                new Document("$project",
+                        new Document("leagueName", "$name")
+                                .append("season", "$seasons.season")
+                                .append("matchID", "$seasons.games.gameID")
+                                .append("totalGoals",
+                                        new Document("$sum", Arrays.asList("$seasons.games.homeTeam.teamStats.goals", "$seasons.games.awayTeam.teamStats.goals")))),
+                new Document("$sort",
+                        new Document("totalGoals", -1L)));
+
+        // Execute the aggregation pipeline
+        AggregateIterable<Document> result = collection.aggregate(pipeline);
+
+        List<GoalsInMatch> goalsInMatches = new ArrayList<>();
+        for (Document doc : result) {
+            GoalsInMatch goalsInMatch = new GoalsInMatch();
+            // Manual mapping from Document to GameStats
+            goalsInMatch.setSeason(doc.getInteger("season"));
+            goalsInMatch.setLeagueName(doc.getString("leagueName"));
+            goalsInMatch.setTotalGoals(doc.getInteger("totalGoals"));
+
+            goalsInMatches.add(goalsInMatch);
+        }
+
+        return goalsInMatches;
+    }
+
+    public List<TeamGoalsPerLeagueAndSeason> getGoalsStatsPerLeagueAndSeason() {
+        // Get the collection you want to query
+        MongoCollection<Document> collection = database.getCollection("stats");
+
+        // Define your aggregation pipeline
+        List<Document> pipeline = Arrays.asList(new Document("$unwind", "$seasons"),
+                new Document("$unwind", "$seasons.games"),
+                new Document("$project",
+                        new Document("leagueName", "$name")
+                                .append("season", "$seasons.season")
+                                .append("game", Arrays.asList(new Document("teamName", "$seasons.games.homeTeam.name")
+                                                .append("goals", "$seasons.games.homeTeam.teamStats.goals")
+                                                .append("shotsOnTarget", "$seasons.games.homeTeam.teamStats.shotsOnTarget")
+                                                .append("xGoals", "$seasons.games.homeTeam.teamStats.xGoals"),
+                                        new Document("teamName", "$seasons.games.awayTeam.name")
+                                                .append("goals", "$seasons.games.awayTeam.teamStats.goals")
+                                                .append("shotsOnTarget", "$seasons.games.awayTeam.teamStats.shotsOnTarget")
+                                                .append("xGoals", "$seasons.games.awayTeam.teamStats.xGoals")))),
+                new Document("$unwind", "$game"),
+                new Document("$group",
+                        new Document("_id",
+                                new Document("leagueName", "$leagueName")
+                                        .append("season", "$season")
+                                        .append("teamName", "$game.teamName"))
+                                .append("totalGoals",
+                                        new Document("$sum", "$game.goals"))
+                                .append("totalShotsOnTarget",
+                                        new Document("$sum", "$game.shotsOnTarget"))
+                                .append("totalXGoals",
+                                        new Document("$sum", "$game.xGoals"))),
+                new Document("$project",
+                        new Document("_id", 0L)
+                                .append("leagueName", "$_id.leagueName")
+                                .append("season", "$_id.season")
+                                .append("teamName", "$_id.teamName")
+                                .append("totalGoals", 1L)
+                                .append("totalShotsOnTarget", 1L)
+                                .append("totalXGoals", 1L)),
+                new Document("$sort",
+                        new Document("leagueName", 1L)
+                                .append("season", -1L)
+                                .append("totalGoals", -1L)));
+
+        // Execute the aggregation pipeline
+        AggregateIterable<Document> result = collection.aggregate(pipeline);
+
+        List<TeamGoalsPerLeagueAndSeason> teamGoalsPerLeagueAndSeasons = new ArrayList<>();
+        for (Document doc : result) {
+            TeamGoalsPerLeagueAndSeason teamGoalsPerLeagueAndSeason = new TeamGoalsPerLeagueAndSeason();
+            // Manual mapping from Document to GameStats
+            teamGoalsPerLeagueAndSeason.setTeamName(doc.getString("teamName"));
+            teamGoalsPerLeagueAndSeason.setLeagueName(doc.getString("leagueName"));
+            teamGoalsPerLeagueAndSeason.setSeason(doc.getInteger("season"));
+            teamGoalsPerLeagueAndSeason.setTotalGoals(doc.getInteger("totalGoals"));
+            teamGoalsPerLeagueAndSeason.setTotalShotsOnTarget(doc.getInteger("totalShotsOnTarget"));
+            teamGoalsPerLeagueAndSeason.setTotalXGoals(doc.getDouble("totalXGoals"));
+
+            teamGoalsPerLeagueAndSeasons.add(teamGoalsPerLeagueAndSeason);
+        }
+
+        return teamGoalsPerLeagueAndSeasons;
     }
 
     public void updateTeamStats(TeamStatMongo newStats) {

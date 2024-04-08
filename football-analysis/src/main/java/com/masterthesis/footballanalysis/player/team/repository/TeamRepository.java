@@ -1,16 +1,15 @@
 package com.masterthesis.footballanalysis.player.team.repository;
 
 import com.masterthesis.footballanalysis.player.team.dto.GameStats;
+import com.masterthesis.footballanalysis.player.team.dto.TeamGoalsPerLeagueAndSeason;
 import com.masterthesis.footballanalysis.player.team.dto.TeamStat;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.List;
 
 @Repository
@@ -22,11 +21,14 @@ public class TeamRepository {
         String query = "SELECT l.name AS LeagueName, " +
                 "CONCAT(ht.name, ' vs ', at.name) AS Match, " +
                 "g.date, " +
-                "(SELECT SUM(ts.shots) FROM team_stats ts WHERE ts.gameID = g.gameID) AS TotalShots " +
+                "SUM(ts.shots) AS TotalShots, " +
+                "g.gameId " +
                 "FROM games g " +
                 "JOIN teams ht ON g.homeTeamID = ht.\"teamId\" " +
                 "JOIN teams at ON g.awayTeamID = at.\"teamId\" " +
                 "JOIN leagues l ON g.leagueID = l.leagueID " +
+                "JOIN team_stats ts ON ts.gameID = g.gameID " +
+                "GROUP BY l.name, g.date, ht.name, at.name, g.gameId " +
                 "ORDER BY TotalShots DESC";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
@@ -35,6 +37,46 @@ public class TeamRepository {
             stats.setMatchName(rs.getString("Match"));
             stats.setDate(rs.getTimestamp("date"));
             stats.setShots(rs.getLong("TotalShots"));
+            return stats;
+        });
+    }
+
+    public List<TeamGoalsPerLeagueAndSeason> getGoalsStatsPerLeagueAndSeason() {
+        String query = "SELECT LeagueName, season, TeamName, SUM(TotalGoals) AS TotalGoals, " +
+                "SUM(TotalShotsOnTarget) AS TotalShotsOnTarget, SUM(TotalXGoals) AS TotalXGoals, " +
+                "CASE WHEN SUM(TotalGoals) > 0 THEN SUM(TotalShotsOnTarget) * 1.0 / SUM(TotalGoals) " +
+                "ELSE NULL END AS AvgShotsOnTargetPerGoal " +
+                "FROM ( " +
+                "SELECT l.name AS LeagueName, g.season, home.name AS TeamName, " +
+                "SUM(g.homeGoals) AS TotalGoals, SUM(ts.shotsOnTarget) AS TotalShotsOnTarget, " +
+                "SUM(ts.xGoals) AS TotalXGoals " +
+                "FROM games g " +
+                "INNER JOIN team_stats ts ON g.gameID = ts.gameID AND g.homeTeamID = ts.teamID " +
+                "INNER JOIN teams home ON g.homeTeamID = home.\"teamId\" " +
+                "INNER JOIN leagues l ON g.leagueID = l.leagueID " +
+                "GROUP BY l.name, g.season, home.name " +
+                "UNION ALL " +
+                "SELECT l.name AS LeagueName, g.season, away.name AS TeamName, " +
+                "SUM(g.awayGoals) AS TotalGoals, SUM(ts.shotsOnTarget) AS TotalShotsOnTarget, " +
+                "SUM(ts.xGoals) AS TotalXGoals " +
+                "FROM games g " +
+                "INNER JOIN team_stats ts ON g.gameID = ts.gameID AND g.awayTeamID = ts.teamID " +
+                "INNER JOIN teams away ON g.awayTeamID = away.\"teamId\" " +
+                "INNER JOIN leagues l ON g.leagueID = l.leagueID " +
+                "GROUP BY l.name, g.season, away.name " +
+                ") AS combined " +
+                "GROUP BY LeagueName, season, TeamName " +
+                "ORDER BY LeagueName, season DESC, SUM(TotalGoals) DESC";
+
+        return jdbcTemplate.query(query, (rs, rowNum) -> {
+            TeamGoalsPerLeagueAndSeason stats = new TeamGoalsPerLeagueAndSeason();
+            stats.setLeagueName(rs.getString("LeagueName"));
+            stats.setSeason(rs.getInt("season"));
+            stats.setTeamName(rs.getString("TeamName"));
+            stats.setTotalGoals(rs.getInt("TotalGoals"));
+            stats.setTotalShotsOnTarget(rs.getInt("TotalShotsOnTarget"));
+            stats.setTotalXGoals(rs.getDouble("TotalXGoals"));
+            stats.setAvgShotsOnTargetPerGoal(rs.getDouble("AvgShotsOnTargetPerGoal")); // Map the new field
             return stats;
         });
     }

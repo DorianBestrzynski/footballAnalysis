@@ -1,6 +1,5 @@
 package com.masterthesis.footballanalysis.player.team.controller;
 
-import com.masterthesis.footballanalysis.player.dto.TopScorers;
 import com.masterthesis.footballanalysis.player.team.dto.*;
 import com.masterthesis.footballanalysis.player.team.service.TeamService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +25,24 @@ public class TeamController {
     public ResponseEntity<List<GameStatsMongo>> getMostIntenseMatchesMongo() {
         var gameStats = teamService.getMostIntenseMatchesMongo();
         return ResponseEntity.ok(gameStats);
+    }
+
+    @GetMapping("/pg/goals-season")
+    public ResponseEntity<List<TeamGoalsPerLeagueAndSeason>> getGoalsStatsPerLeagueAndSeasonPg() {
+        var teamGoalsPerLeagueAndSeasons = teamService.getGoalsStatsPerLeagueAndSeasonPg();
+        return ResponseEntity.ok(teamGoalsPerLeagueAndSeasons);
+    }
+
+    @GetMapping("/mongo/goals-season")
+    public ResponseEntity<List<TeamGoalsPerLeagueAndSeason>> getGoalsStatsPerLeagueAndSeasonMongo() {
+        var teamGoalsPerLeagueAndSeasons = teamService.getGoalsStatsPerLeagueAndSeasonMongo();
+        return ResponseEntity.ok(teamGoalsPerLeagueAndSeasons);
+    }
+
+    @GetMapping("/mongo/goals-match")
+    public ResponseEntity<List<GoalsInMatch>> getGoalsInMatchMongo() {
+        var goalsInMatches = teamService.getGoalsInMatch();
+        return ResponseEntity.ok(goalsInMatches);
     }
 
     @PostMapping("/pg/stats")
