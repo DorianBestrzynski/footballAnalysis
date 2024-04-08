@@ -1,12 +1,10 @@
-package com.gatling.tests.api
+package com.gatling.tests.api.mongo
 
 import io.gatling.core.Predef._
-import io.gatling.http.Predef._
 import io.gatling.core.structure.ScenarioBuilder
+import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import scala.io.Source
@@ -37,17 +35,17 @@ class TeamStatCreateSimulation extends Simulation {
     start.plusDays(randomDaysToAdd).atTime(15, 0).toString
   }
 
-  val insertTeamStatBatchScenario: ScenarioBuilder = scenario("Insert TeamStat Batch Data")
-    .exec(session => {
-      val teamStats = (1 to 10000).map { _ =>
-        val gameId = Random.shuffle(gameIds).head
-        val teamId = Random.shuffle(teamIds).head
-        val shots = Random.nextInt(201)
-        s"""
+  def generateUpdateBody(): String = {
+    val gameId = Random.shuffle(gameIds).head
+    val teamId = Random.shuffle(teamIds).head
+    val shots = Random.nextInt(201)
+    // Generate a random body for the update. This is just an example, adapt it to your needs.
+    s"""
         {
-          "gameID": $gameId,
-          "teamID": $teamId,
-          "season": ${2015 + Random.nextInt(10)},
+          "leagueId": 1,
+          "gameID": 81,
+          "teamID": "${if (Random.nextBoolean()) 89 else 83}",
+          "season": 2015,
           "date": "${randomDate("2015-01-01", "2024-04-02")}",
           "location": "${if (Random.nextBoolean()) "H" else "A"}",
           "goals": ${Random.nextInt(16)},
@@ -63,23 +61,22 @@ class TeamStatCreateSimulation extends Simulation {
           "result": "${Seq("W", "D", "L")(Random.nextInt(3))}"
         }
         """
-      }.mkString("[", ",", "]")
+  }
 
-      session.set("teamStatsJson", teamStats)
-    })
-    .exec(session => {
-      val teamStatsJson = session("teamStatsJson").as[String]
-      Files.write(Paths.get("teamStatsJson.txt"), teamStatsJson.getBytes(StandardCharsets.UTF_8))
-      session
-    })
-    .exec(http("Insert TeamStat Batch")
-      .post("/api/v1/team/stats") // Assuming this is your batch insert endpoint
-      .body(StringBody("${teamStatsJson}")).asJson
-      .check(status.is(201)) // Assuming 201 is the status code for successful batch insert
-    )
-
+  val updateTeamStatScenario: ScenarioBuilder = scenario("Create TeamStat")
+    .repeat(5) {
+      exec(session => {
+        val updateBody = generateUpdateBody()
+        session.set("updateBody", updateBody)
+      })
+        .exec(http("Create TeamStat")
+          .post("/api/v1/team/mongo/stat") // Assuming this is your update endpoint, with teamStatId as a path parameter
+          .body(StringBody("${updateBody}")).asJson
+          .check(status.is(201)) // Assuming 200 is the status code for successful update
+        )
+    }
   setUp(
-    insertTeamStatBatchScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
+    updateTeamStatScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
   ).protocols(httpProtocol)
 }
 
