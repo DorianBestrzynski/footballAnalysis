@@ -7,6 +7,12 @@ services:
       POSTGRES_DB: football_db
     ports:
       - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50' # Limit to 50% of a CPU core
+          memory: 512M # Limit to 512 MB
+
   mongoDb:
     image: mongo:latest
     container_name: mongodb
@@ -14,6 +20,10 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
-    ports: 
+    ports:
       - "27017:27017"
-
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
