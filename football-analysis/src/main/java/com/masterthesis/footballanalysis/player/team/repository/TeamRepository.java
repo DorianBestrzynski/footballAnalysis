@@ -24,8 +24,8 @@ public class TeamRepository {
                 "SUM(ts.shots) AS TotalShots, " +
                 "g.gameId " +
                 "FROM games g " +
-                "JOIN teams ht ON g.homeTeamID = ht.\"teamId\" " +
-                "JOIN teams at ON g.awayTeamID = at.\"teamId\" " +
+                "JOIN teams ht ON g.homeTeamID = ht.teamId " +
+                "JOIN teams at ON g.awayTeamID = at.teamId " +
                 "JOIN leagues l ON g.leagueID = l.leagueID " +
                 "JOIN team_stats ts ON ts.gameID = g.gameID " +
                 "GROUP BY l.name, g.date, ht.name, at.name, g.gameId " +
