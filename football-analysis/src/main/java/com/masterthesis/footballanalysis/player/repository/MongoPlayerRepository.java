@@ -64,7 +64,6 @@ public class MongoPlayerRepository {
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
-        System.out.println("test");
         List<TopScorersMongo> topScorerList = new ArrayList<>();
         for (Document doc : result) {
             TopScorersMongo topScorersMongo = new TopScorersMongo();
