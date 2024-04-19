@@ -1,4 +1,4 @@
-package com.gatling.tests.api.postgres
+package com.gatling.tests.api.version_1.others.postgres
 
 import io.gatling.core.Predef._
 import io.gatling.core.structure.ScenarioBuilder

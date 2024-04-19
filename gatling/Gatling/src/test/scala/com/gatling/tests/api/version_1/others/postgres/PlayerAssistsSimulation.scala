@@ -1,11 +1,12 @@
-package com.gatling.tests.api.postgres
+package com.gatling.tests.api.version_1.others.postgres
 
 import io.gatling.core.Predef._
 import io.gatling.core.structure.ScenarioBuilder
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
-class ShotsSimulation extends Simulation {
+class PlayerAssistsSimulation extends Simulation {
+
   val httpProtocol: HttpProtocolBuilder = http
     .baseUrl("http://localhost:8080")
 
@@ -13,18 +14,18 @@ class ShotsSimulation extends Simulation {
   val warmUpScenario: ScenarioBuilder = scenario("Warm-up Phase")
     .repeat(2) { // Repeat the following block 5 times
       exec(
-        http("Get shots")
-          .get("/api/v1/player/pg/shots")
+        http("Get Assists")
+          .get("/api/v1/player/pg/assists")
           .check(status.is(200))
       )
     }
 
   // Actual test scenario
-  val testScenario: ScenarioBuilder = scenario("Test GET shots")
-    .repeat(5) { // Repeat the following block 5 times
+  val testScenario: ScenarioBuilder = scenario("Test GET Top Scorers")
+    .repeat(100) { // Repeat the following block 5 times
       exec(
-        http("Get shots")
-          .get("/api/v1/player/pg/shots")
+        http("Get Assists")
+          .get("/api/v1/player/pg/assists")
           .check(status.is(200))
       )
     }// Repeat the request 5 times for the actual test
@@ -34,10 +35,10 @@ class ShotsSimulation extends Simulation {
     // Execute the warm-up scenario without affecting the main test metrics
     warmUpScenario.inject(atOnceUsers(1)),
     // Execute the actual test scenario
-    testScenario.inject(atOnceUsers(1))
+    testScenario.inject(atOnceUsers(10))
   ).protocols(httpProtocol)
     .assertions(
-      global.responseTime.mean.lt(5000), // Assert the mean response time is less than 50ms
+      global.responseTime.mean.lt(50), // Assert the mean response time is less than 50ms
       global.successfulRequests.percent.gt(95) // Assert more than 95% of requests are successful
     )
 }

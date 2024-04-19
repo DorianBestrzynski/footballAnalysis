@@ -1,33 +1,40 @@
-package com.gatling.tests.api.postgres
+
+package com.gatling.tests.api.version_1.mongo
 
 import io.gatling.core.Predef._
 import io.gatling.core.structure.ScenarioBuilder
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
-class IntenseGamesSimulation extends Simulation{
+class Query9 extends Simulation {
   val httpProtocol: HttpProtocolBuilder = http
     .baseUrl("http://localhost:8080")
 
   // Warm-up scenario
   val warmUpScenario: ScenarioBuilder = scenario("Warm-up Phase")
-    .repeat(2) { // Repeat the following block 5 times
+    .group("WARM UP") {
+      // Repeat the following block 5 times
       exec(
-        http("Get Intense Games")
-          .get("/api/v1/team/pg/intense-matches")
-          .check(status.is(200))
+        http("Query 9")
+          .get("/api/v1/game/mongo/query-9")
+          .silent
       )
+        .exec(
+          http("Query 9")
+            .get("/api/v1/game/mongo/query-9")
+            .silent
+        )
     }
 
   // Actual test scenario
-  val testScenario: ScenarioBuilder = scenario("Test GET intense matches")
+  val testScenario: ScenarioBuilder = scenario("Test Query 9")
     .repeat(5) { // Repeat the following block 5 times
       exec(
-        http("Get Intense Games")
-          .get("/api/v1/team/pg/intense-matches")
+        http("Query 9")
+          .get("/api/v1/game/mongo/query-9")
           .check(status.is(200))
       )
-    }// Repeat the request 5 times for the actual test
+    } // Repeat the request 5 times for the actual test
 
   // Setup
   setUp(

@@ -1,34 +1,39 @@
-package com.gatling.tests.api.mongo
+package com.gatling.tests.api.version_1.mongo
 
 import io.gatling.core.Predef._
 import io.gatling.core.structure.ScenarioBuilder
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
-class PlayerAssistsSimulation extends Simulation {
-
+class Query4 extends Simulation {
   val httpProtocol: HttpProtocolBuilder = http
     .baseUrl("http://localhost:8080")
 
   // Warm-up scenario
   val warmUpScenario: ScenarioBuilder = scenario("Warm-up Phase")
-    .repeat(2) { // Repeat the following block 5 times
+    .group("WARM UP") {
+      // Repeat the following block 5 times
       exec(
-        http("Get Assists")
-          .get("/api/v1/player/mongo/assists")
-          .check(status.is(200))
+        http("Query 4")
+          .get("/api/v1/game/mongo/query-4")
+          .silent
       )
+        .exec(
+          http("Query 4")
+            .get("/api/v1/game/mongo/query-4")
+            .silent
+        )
     }
 
   // Actual test scenario
-  val testScenario: ScenarioBuilder = scenario("Test GET Top Scorers")
+  val testScenario: ScenarioBuilder = scenario("Test Query 4")
     .repeat(5) { // Repeat the following block 5 times
       exec(
-        http("Get Assists")
-          .get("/api/v1/player/mongo/assists")
+        http("Query 4")
+          .get("/api/v1/game/mongo/query-4")
           .check(status.is(200))
       )
-    }// Repeat the request 5 times for the actual test
+    } // Repeat the request 5 times for the actual test
 
   // Setup
   setUp(
@@ -38,7 +43,7 @@ class PlayerAssistsSimulation extends Simulation {
     testScenario.inject(atOnceUsers(1))
   ).protocols(httpProtocol)
     .assertions(
-      global.responseTime.mean.lt(50), // Assert the mean response time is less than 50ms
+      global.responseTime.mean.lt(5000), // Assert the mean response time is less than 50ms
       global.successfulRequests.percent.gt(95) // Assert more than 95% of requests are successful
     )
 }

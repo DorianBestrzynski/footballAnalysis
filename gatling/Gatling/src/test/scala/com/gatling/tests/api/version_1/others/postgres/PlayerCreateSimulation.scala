@@ -1,4 +1,4 @@
-package com.gatling.tests.api.postgres
+package com.gatling.tests.api.version_1.others.postgres
 
 import io.gatling.core.Predef._
 import io.gatling.core.structure.ScenarioBuilder
@@ -84,7 +84,7 @@ class PlayerCreateSimulation extends Simulation {
   }
 
   val updateTeamStatScenario: ScenarioBuilder = scenario("Create Player")
-    .repeat(5) {
+    .repeat(100) {
       exec(session => {
         val updateBody = generateUpdateBody()
         session.set("updateBody", updateBody)
@@ -96,6 +96,6 @@ class PlayerCreateSimulation extends Simulation {
         )
     }
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
+    updateTeamStatScenario.inject(atOnceUsers(10)) // Execute the scenario for one user
   ).protocols(httpProtocol)
 }

@@ -1,4 +1,4 @@
-package com.gatling.tests.api.mongo
+package com.gatling.tests.api.version_1.others.postgres
 
 import io.gatling.core.Predef._
 import io.gatling.core.structure.ScenarioBuilder
@@ -42,10 +42,9 @@ class TeamStatCreateSimulation extends Simulation {
     // Generate a random body for the update. This is just an example, adapt it to your needs.
     s"""
         {
-          "leagueId": 1,
-          "gameID": 81,
-          "teamID": "${if (Random.nextBoolean()) 89 else 83}",
-          "season": 2015,
+          "gameID": $gameId,
+          "teamID": $teamId,
+          "season": ${2015 + Random.nextInt(10)},
           "date": "${randomDate("2015-01-01", "2024-04-02")}",
           "location": "${if (Random.nextBoolean()) "H" else "A"}",
           "goals": ${Random.nextInt(16)},
@@ -64,19 +63,19 @@ class TeamStatCreateSimulation extends Simulation {
   }
 
   val updateTeamStatScenario: ScenarioBuilder = scenario("Create TeamStat")
-    .repeat(5) {
+    .repeat(100) {
       exec(session => {
         val updateBody = generateUpdateBody()
         session.set("updateBody", updateBody)
       })
         .exec(http("Create TeamStat")
-          .post("/api/v1/team/mongo/stat") // Assuming this is your update endpoint, with teamStatId as a path parameter
+          .post("/api/v1/team/pg/stat") // Assuming this is your update endpoint, with teamStatId as a path parameter
           .body(StringBody("${updateBody}")).asJson
           .check(status.is(201)) // Assuming 200 is the status code for successful update
         )
     }
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
+    updateTeamStatScenario.inject(atOnceUsers(10)) // Execute the scenario for one user
   ).protocols(httpProtocol)
 }
 
