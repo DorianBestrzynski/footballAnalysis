@@ -1,7 +1,6 @@
 package com.masterthesis.footballanalysis.version_1.repository;
 
 
-import com.masterthesis.footballanalysis.player.team.dto.GameStatsMongo;
 import com.masterthesis.footballanalysis.version_1.dto.*;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
@@ -16,7 +15,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class MongoDbRepository {
+public class MongoDbReadRepository {
     private final MongoDatabase database;
 
     public List<Query1DTOMongo> query1(int awayGoals) {

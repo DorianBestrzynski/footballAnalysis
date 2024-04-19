@@ -1,13 +1,12 @@
 package com.masterthesis.footballanalysis.version_1.controller;
 
+import com.masterthesis.footballanalysis.player.team.dto.TeamStat;
 import com.masterthesis.footballanalysis.version_1.dto.*;
 import com.masterthesis.footballanalysis.version_1.service.VersionOneService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -77,6 +76,24 @@ public class VersionOneController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/pg/write-1")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void write1Pg(@RequestBody Player player) {
+        service.write1Postgres(player);
+    }
+
+    @PostMapping("/pg/write-2")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void write2Pg(@RequestBody TeamStat teamStat) {
+        service.write2Postgres(teamStat);
+    }
+
+    @PostMapping("/pg/write-3")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void write3Pg(@RequestBody Game game) {
+        service.write3Postgres(game);
+    }
+
     @GetMapping("/mongo/query-1")
     public ResponseEntity<List<Query1DTOMongo>> query1Mongo(@RequestParam int awayGoals) {
         var result = service.query1Mongo(awayGoals);
@@ -135,5 +152,23 @@ public class VersionOneController {
     public ResponseEntity<List<Query10DTO>> query10Mongo() {
         var result = service.query10Mongo();
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/mongo/write-1")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void write1Mongo(@RequestBody Player player) {
+        service.write1Mongo(player);
+    }
+
+    @PostMapping("/mongo/write-2")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void write2Mongo(@RequestBody TeamStatMongo teamStatMongo) {
+        service.write2Mongo(teamStatMongo);
+    }
+
+    @PostMapping("/mongo/write-3")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void write3Mongo(@RequestBody Game game) {
+        service.write3Mongo(game);
     }
 }

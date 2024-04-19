@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class PostgresRepository {
+public class PostgresReadRepository {
     private final JdbcTemplate jdbcTemplate;
 
     public List<Query1DTOPostgres> query1(int awayGoals) {
