@@ -1,4 +1,4 @@
-package com.gatling.tests.api.version_1.others.postgres
+package com.gatling.tests.api.version_1.postgres
 
 import io.gatling.core.Predef._
 import io.gatling.core.structure.ScenarioBuilder
@@ -11,7 +11,7 @@ import scala.io.Source
 import scala.util.{Random, Using}
 
 
-class PlayerCreateSimulation extends Simulation {
+class Write1 extends Simulation {
   def loadIdsFromFile(filePath: String): List[String] = {
     Using(Source.fromFile(filePath)) { source =>
       source.getLines().drop(1).toList // Pomijamy pierwszą linię (nagłówek)
@@ -31,6 +31,7 @@ class PlayerCreateSimulation extends Simulation {
 
   val gameIds: List[String] = loadIdsFromFile("gameIds.csv")
   val teamIds: List[String] = loadIdsFromFile("teamIds.csv")
+  val playerIds: List[String] = loadIdsFromFile("playerIds.csv")
 
   def randomDate(startDate: String, endDate: String): String = {
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -43,13 +44,15 @@ class PlayerCreateSimulation extends Simulation {
   def generateUpdateBody(): String = {
     val name = randomString(10)
 
-    val appearances = (1 to 100).map(_ => generateAppearance()).mkString("[", ",", "]")
+    val appearances = (1 to 2).map(_ => generateAppearance()).mkString("[", ",", "]")
+    val shots = (1 to 2).map(_ => generateShots()).mkString("[", ",", "]")
 
     s"""
     {
       "name": "$name",
-      "appearances": $appearances
-    }
+      "appearances": $appearances,
+      "shots": $shots
+      }
   """
   }
 
@@ -83,19 +86,47 @@ class PlayerCreateSimulation extends Simulation {
   """.trim
   }
 
+  def generateShots(): String = {
+    val gameID = Random.shuffle(gameIds).head
+    val shooterId = Random.shuffle(playerIds).head
+    val assisterId = Random.shuffle(playerIds).head
+    val situation = Seq("FromCorner", "Penulllty", "OpenPlay", "SetPiece", "DirectFreekick")(Random.nextInt(5))
+    val lastAction = Seq("CrossNotClaimed", "BallRecovery", "PenullltyFaced", "Save", "None", "Interception", "Pass", "Smother", "CornerAwarded", "ChanceMissed")(Random.nextInt(10))
+    val shotType = Seq("Head", "LeftFoot", "OtherBodyPart", "RightFoot")(Random.nextInt(4))
+    val shotResult = Seq("OwnGoal", "MissedShots", "ShotOnPost", "Goal", "SavedShot")(Random.nextInt(5))
+
+
+    // Generate a random body for the update.
+    s"""
+    {
+      "gameID": $gameID,
+      "shooterID": $shooterId,
+      "assisterID": $assisterId,
+      "minute": ${Random.nextInt(90)},
+      "situation": "$situation",
+      "lastAction": "$lastAction",
+      "shotType": "$shotType",
+      "shotResult": "$shotResult",
+      "xGoals": ${Random.nextFloat()},
+      "positionX": ${Random.nextFloat()},
+      "positionY": ${Random.nextFloat()}
+    }
+  """.trim
+  }
+
   val updateTeamStatScenario: ScenarioBuilder = scenario("Create Player")
-    .repeat(100) {
+    .repeat(1) {
       exec(session => {
         val updateBody = generateUpdateBody()
         session.set("updateBody", updateBody)
       })
-        .exec(http("Create TeamStat")
-          .post("/api/v1/player/pg/player") // Assuming this is your update endpoint, with teamStatId as a path parameter
+        .exec(http("Create Player")
+          .post("/api/v1/game/pg/write-1") // Assuming this is your update endpoint, with teamStatId as a path parameter
           .body(StringBody("${updateBody}")).asJson
           .check(status.is(201)) // Assuming 200 is the status code for successful update
         )
     }
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(10)) // Execute the scenario for one user
+    updateTeamStatScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
   ).protocols(httpProtocol)
 }

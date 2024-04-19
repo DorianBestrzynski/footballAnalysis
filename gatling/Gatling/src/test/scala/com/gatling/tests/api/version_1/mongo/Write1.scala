@@ -1,17 +1,19 @@
-package com.gatling.tests.api.version_1.others.mongo
+package com.gatling.tests.api.version_1.mongo
 
 import io.gatling.core.Predef._
 import io.gatling.core.structure.ScenarioBuilder
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import scala.io.Source
 import scala.util.{Random, Using}
 
 
-class PlayerCreateSimulation extends Simulation {
+class Write1 extends Simulation {
   def loadIdsFromFile(filePath: String): List[String] = {
     Using(Source.fromFile(filePath)) { source =>
       source.getLines().drop(1).toList // Pomijamy pierwszą linię (nagłówek)
@@ -44,11 +46,13 @@ class PlayerCreateSimulation extends Simulation {
     val name = randomString(10)
 
     val appearances = (1 to 100).map(_ => generateAppearance()).mkString("[", ",", "]")
+    val shots = (1 to 100).map(_ => generateShots()).mkString("[", ",", "]")
 
     s"""
     {
       "name": "$name",
-      "appearances": $appearances
+      "appearances": $appearances,
+      "shots": $shots
     }
   """
   }
@@ -83,19 +87,45 @@ class PlayerCreateSimulation extends Simulation {
   """.trim
   }
 
+  def generateShots(): String = {
+    val gameID = Random.shuffle(gameIds).head
+    val situation = Seq("FromCorner", "Penulllty", "OpenPlay", "SetPiece", "DirectFreekick")(Random.nextInt(5))
+    val lastAction = Seq("CrossNotClaimed", "BallRecovery", "PenullltyFaced", "Save", "None", "Interception", "Pass", "Smother", "CornerAwarded", "ChanceMissed")(Random.nextInt(10))
+    val shotType = Seq("Head", "LeftFoot", "OtherBodyPart", "RightFoot")(Random.nextInt(4))
+    val shotResult = Seq("OwnGoal", "MissedShots", "ShotOnPost", "Goal", "SavedShot")(Random.nextInt(5))
+
+
+    // Generate a random body for the update.
+    s"""
+    {
+      "gameID": $gameID,
+      "assisterID": ${Random.nextInt(50)},
+      "minute": ${Random.nextInt(90)},
+      "situation": "$situation",
+      "lastAction": "$lastAction",
+      "shotType": "$shotType",
+      "shotResult": "$shotResult",
+      "xGoals": ${Random.nextFloat()},
+      "positionX": ${Random.nextFloat()},
+      "positionY": ${Random.nextFloat()}
+    }
+  """.trim
+  }
+
   val updateTeamStatScenario: ScenarioBuilder = scenario("Create Player")
-    .repeat(100) {
+    .repeat(1) {
       exec(session => {
         val updateBody = generateUpdateBody()
+        Files.write(Paths.get("teamStatsJson.txt"), updateBody.getBytes(StandardCharsets.UTF_8))
         session.set("updateBody", updateBody)
       })
-        .exec(http("Create TeamStat")
-          .post("/api/v1/player/mongo/player") // Assuming this is your update endpoint, with teamStatId as a path parameter
+        .exec(http("Create Player")
+          .post("/api/v1/game/mongo/write-1") // Assuming this is your update endpoint, with teamStatId as a path parameter
           .body(StringBody("${updateBody}")).asJson
           .check(status.is(201)) // Assuming 200 is the status code for successful update
         )
     }
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(10)) // Execute the scenario for one user
+    updateTeamStatScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
   ).protocols(httpProtocol)
 }
