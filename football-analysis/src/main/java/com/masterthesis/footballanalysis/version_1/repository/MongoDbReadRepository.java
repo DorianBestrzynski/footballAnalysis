@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Repository
+@Repository("MongoDbReadRepositoryV1")
 @RequiredArgsConstructor
 public class MongoDbReadRepository {
     private final MongoDatabase database;

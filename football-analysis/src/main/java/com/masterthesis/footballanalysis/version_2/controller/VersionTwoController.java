@@ -1,6 +1,5 @@
 package com.masterthesis.footballanalysis.version_2.controller;
 
-import com.masterthesis.footballanalysis.player.team.dto.TeamStat;
 import com.masterthesis.footballanalysis.version_2.dto.*;
 import com.masterthesis.footballanalysis.version_2.service.VersionTwoService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +17,8 @@ public class VersionTwoController {
     private final VersionTwoService service;
 
     @GetMapping("/pg/query-1")
-    public ResponseEntity<List<Query1DTOPostgres>> query1Pg(@RequestParam Timestamp date) {
-        var result = service.query1Postgres(date);
+    public ResponseEntity<List<Query1DTOPostgres>> query1Pg(@RequestBody Query1Request date) {
+        var result = service.query1Postgres(date.getDate());
         return ResponseEntity.ok(result);
     }
 
@@ -55,8 +54,8 @@ public class VersionTwoController {
 
     @PostMapping("/pg/write-1")
     @ResponseStatus(HttpStatus.CREATED)
-    public void write1Pg(@RequestBody Player player) {
-        service.write1Postgres(player);
+    public void write1Pg(@RequestBody Write1DTO write1DTO) {
+        service.write1Postgres(write1DTO);
     }
 
     @PostMapping("/pg/write-2")
@@ -72,8 +71,8 @@ public class VersionTwoController {
     }
 
     @GetMapping("/mongo/query-1")
-    public ResponseEntity<List<Query1DTOMongo>> query1Mongo(@RequestParam Timestamp date) {
-        var result = service.query1Mongo(date);
+    public ResponseEntity<List<Query1DTOMongo>> query1Mongo(@RequestBody Query1Request date) {
+        var result = service.query1Mongo(date.getDate());
         return ResponseEntity.ok(result);
     }
 
@@ -108,8 +107,8 @@ public class VersionTwoController {
     }
     @PostMapping("/mongo/write-1")
     @ResponseStatus(HttpStatus.CREATED)
-    public void write1Mongo(@RequestBody Player player) {
-        service.write1Mongo(player);
+    public void write1Mongo(@RequestBody GameDocument gameDocument) {
+        service.write1Mongo(gameDocument);
     }
 
     @PostMapping("/mongo/write-2")

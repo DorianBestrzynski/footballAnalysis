@@ -12,76 +12,119 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Updates.combine;
 import static com.mongodb.client.model.Updates.set;
 
-@Repository
+@Repository("MongoDbWriteRepositoryV2")
 @RequiredArgsConstructor
 public class MongoDbWriteRepository {
     private final MongoDatabase database;
 
+    public void updateTable(GameDocument gameDocument) {
+        MongoCollection<Document> collection = database.getCollection("games");
+        int gameId = gameDocument.getGameId();
 
-    public void updatePlayer(Player player) {
-        MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
+        // Create filter for the update operation
+        Document filter = new Document("gameID", gameId);
 
-        // Insert or update the player document into the collection
-        var filter = new Document("playerID", player.getPlayerId());
-        var  update = new Document("$set", player(player));
-        UpdateOptions options = new UpdateOptions().upsert(true); // This will insert the document if it doesn't exist, or update it if it does
+        // Convert the DTO to a MongoDB document
+        Document updateDoc = new Document("$set", gameDocumentToMongoDocument(gameDocument));
 
-        collection.updateOne(filter, update, options);
+        // Set options to upsert (update existing document or insert if not exists)
+        UpdateOptions options = new UpdateOptions().upsert(true);
+
+        // Execute the update operation
+        collection.updateOne(filter, updateDoc, options);
     }
 
-    private Document player(Player player) {
-        return new Document("playerID", player.getPlayerId())
-                .append("name", player.getName())
-                .append("appearances", appearances(player))
-                .append("shots", shots(player));
+    private Document gameDocumentToMongoDocument(GameDocument gameDocument) {
+        return new Document()
+                .append("gameID", gameDocument.getGameId())
+                .append("date", gameDocument.getDate())
+                .append("leagueName", gameDocument.getLeagueName())
+                .append("season", gameDocument.getSeason())
+                .append("homeGoals", gameDocument.getHomeGoals())
+                .append("awayGoals", gameDocument.getAwayGoals())
+                .append("homeProbability", gameDocument.getHomeProbability())
+                .append("awayProbability", gameDocument.getAwayProbability())
+                .append("drawProbability", gameDocument.getDrawProbability())
+                .append("homeGoalsHalfTime", gameDocument.getHomeGoalsHalfTime())
+                .append("awayGoalsHalfTime", gameDocument.getAwayGoalsHalfTime())
+                .append("homeTeam", teamInfoToDocument(gameDocument.getHomeTeam()))
+                .append("awayTeam", teamInfoToDocument(gameDocument.getAwayTeam()))
+                .append("appearances", appearancesToListDocuments(gameDocument.getAppearances()))
+                .append("shots", shotsToListDocuments(gameDocument.getShots()));
     }
 
-    private List<Document> appearances(Player player) {
-        List<Document> appearancesDocs = new ArrayList<>();
-        for (PlayerAppearance appearance : player.getAppearances()) {
-            Document appearanceDoc = new Document("gameID", appearance.getGameID())
-                    .append("leagueID", appearance.getLeagueID())
-                    .append("time", appearance.getTime())
-                    .append("goals", appearance.getGoals())
-                    .append("ownGoals", appearance.getOwnGoals())
-                    .append("xGoals", appearance.getXGoals())
-                    .append("assists", appearance.getAssists())
-                    .append("position", appearance.getPosition())
-                    .append("positionOrder", appearance.getPositionOrder())
-                    .append("xAssists", appearance.getXAssists())
-                    .append("shots", appearance.getShots())
-                    .append("keyPasses", appearance.getKeyPasses())
-                    .append("yellowCards", appearance.getYellowCards())
-                    .append("redCards", appearance.getRedCards())
-                    .append("xGoalsChain", appearance.getXGoalsChain())
-                    .append("xGoalsBuildup", appearance.getXGoalsBuildup());
-            appearancesDocs.add(appearanceDoc);
-        }
-        return appearancesDocs;
+    private Document teamInfoToDocument(GameDocument.TeamInfo teamInfo) {
+        return new Document()
+                .append("teamID", teamInfo.getTeamID())
+                .append("name", teamInfo.getName())
+                .append("teamStats", new Document()
+                        .append("teamstatId", teamInfo.getTeamStats().getTeamstatId())
+                        .append("location", String.valueOf(teamInfo.getTeamStats().getLocation()))
+                        .append("goals", teamInfo.getTeamStats().getGoals())
+                        .append("xGoals", teamInfo.getTeamStats().getXGoals())
+                        .append("shots", teamInfo.getTeamStats().getShots())
+                        .append("shotsOnTarget", teamInfo.getTeamStats().getShotsOnTarget())
+                        .append("deep", teamInfo.getTeamStats().getDeep())
+                        .append("ppda", teamInfo.getTeamStats().getPpda())
+                        .append("fouls", teamInfo.getTeamStats().getFouls())
+                        .append("corners", teamInfo.getTeamStats().getCorners())
+                        .append("yellowCards", teamInfo.getTeamStats().getYellowCards())
+                        .append("redCards", teamInfo.getTeamStats().getRedCards())
+                        .append("result", String.valueOf(teamInfo.getTeamStats().getResult())));
     }
 
-    private List<Document> shots(Player player) {
-        List<Document> shotsDocs = new ArrayList<>();
-        for (PlayerShots shot : player.getShots()) {
-            Document appearanceDoc = new Document("gameID", shot.getGameID())
-                    .append("gameID", shot.getGameID())
-                    .append("shooterID", shot.getShooterID())
-                    .append("assisterID", shot.getAssisterID())
-                    .append("minute", shot.getMinute())
-                    .append("situation", shot.getSituation())
-                    .append("lastAction", shot.getLastAction())
-                    .append("shotType", shot.getShotType())
-                    .append("shotResult", shot.getShotResult())
-                    .append("xGoal", shot.getXGoal())
-                    .append("positionX", shot.getPositionX())
-                    .append("positionY", shot.getPositionY());
-            shotsDocs.add(appearanceDoc);
-        }
-        return shotsDocs;
+    private List<Document> appearancesToListDocuments(List<GameDocument.PlayerAppearance> appearances) {
+        return appearances.stream()
+                .map(appearance -> new Document()
+                        .append("appearanceId", appearance.getAppearanceId())
+                        .append("gameID", appearance.getGameID())
+                        .append("playerID", appearance.getPlayerID())
+                        .append("goals", appearance.getGoals())
+                        .append("ownGoals", appearance.getOwnGoals())
+                        .append("shots", appearance.getShots())
+                        .append("xGoals", appearance.getXGoals())
+                        .append("xGoalsChain", appearance.getXGoalsChain())
+                        .append("xGoalsBuildup", appearance.getXGoalsBuildup())
+                        .append("assists", appearance.getAssists())
+                        .append("keyPasses", appearance.getKeyPasses())
+                        .append("xAssists", appearance.getXAssists())
+                        .append("position", appearance.getPosition())
+                        .append("positionOrder", appearance.getPositionOrder())
+                        .append("yellowCard", appearance.getYellowCard())
+                        .append("redCard", appearance.getRedCard())
+                        .append("time", appearance.getTime())
+                        .append("substituteIn", appearance.getSubstituteIn())
+                        .append("substituteOut", appearance.getSubstituteOut())
+                        .append("leagueId", appearance.getLeagueId())
+                        .append("playerName", appearance.getPlayerName())
+                        .append("leagueName", appearance.getLeagueName())
+                        .append("understatNotation", appearance.getUnderstatNotation()))
+                .collect(Collectors.toList());
+    }
+
+    private List<Document> shotsToListDocuments(List<GameDocument.Shot> shots) {
+        return shots.stream()
+                .map(shot -> new Document()
+                        .append("shotId", shot.getShotId())
+                        .append("gameID", shot.getGameId())
+                        .append("shooterId", shot.getShooterId())
+                        .append("assisterId", shot.getAssisterId())
+                        .append("minute", shot.getMinute())
+                        .append("situation", shot.getSituation())
+                        .append("lastAction", shot.getLastAction())
+                        .append("shotType", shot.getShotType())
+                        .append("shotResult", shot.getShotResult())
+                        .append("xGoal", shot.getXGoal())
+                        .append("positionX", shot.getPositionX())
+                        .append("positionY", shot.getPositionY())
+                        .append("shooterName", shot.getShooterName())
+                        .append("assisterName", shot.getAssisterName()))
+                .collect(Collectors.toList());
     }
 
     public void updateTeamStats(TeamStatMongo newStats) {

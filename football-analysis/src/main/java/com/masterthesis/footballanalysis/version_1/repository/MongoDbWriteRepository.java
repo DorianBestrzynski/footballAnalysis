@@ -16,7 +16,7 @@ import java.util.List;
 import static com.mongodb.client.model.Updates.combine;
 import static com.mongodb.client.model.Updates.set;
 
-@Repository
+@Repository("MongoDbWriteRepositoryV1")
 @RequiredArgsConstructor
 public class MongoDbWriteRepository {
     private final MongoDatabase database;

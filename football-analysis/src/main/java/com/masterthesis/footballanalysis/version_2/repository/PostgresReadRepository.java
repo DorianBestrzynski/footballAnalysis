@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.Timestamp;
 import java.util.List;
 
-@Repository
+@Repository("PostgresReadRepositoryV2")
 @RequiredArgsConstructor
 public class PostgresReadRepository {
     private final JdbcTemplate jdbcTemplate;

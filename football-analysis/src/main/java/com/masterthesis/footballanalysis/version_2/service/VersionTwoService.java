@@ -1,6 +1,5 @@
 package com.masterthesis.footballanalysis.version_2.service;
 
-import com.masterthesis.footballanalysis.player.team.dto.TeamStat;
 import com.masterthesis.footballanalysis.version_2.dto.*;
 import com.masterthesis.footballanalysis.version_2.repository.MongoDbReadRepository;
 import com.masterthesis.footballanalysis.version_2.repository.MongoDbWriteRepository;
@@ -8,6 +7,7 @@ import com.masterthesis.footballanalysis.version_2.repository.PostgresReadReposi
 import com.masterthesis.footballanalysis.version_2.repository.PostgresWriteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -45,8 +45,17 @@ public class VersionTwoService {
         return postgresReadRepository.query6();
     }
 
-    public void write1Postgres(Player player) {
-        postgresWriteRepository.createPlayerAndAppearancesAndShots(player);
+    @Transactional
+    public void write1Postgres(Write1DTO dto) {
+        var leagueId = postgresWriteRepository.createLeague(dto.getLeague());
+        var playerId = postgresWriteRepository.createPlayer(dto.getPlayer());
+        var teamId1 = postgresWriteRepository.createTeam(dto.getTeam1());
+        var teamId2 = postgresWriteRepository.createTeam(dto.getTeam2());
+        var gameId = postgresWriteRepository.createGame(dto.getGame(), leagueId, teamId1, teamId2);
+        postgresWriteRepository.createPlayerAppearance(dto.getPlayerAppearance(), gameId, leagueId, playerId);
+        postgresWriteRepository.createTeamStat(dto.getTeamStat1(), gameId, teamId1);
+        postgresWriteRepository.createTeamStat(dto.getTeamStat1(), gameId, teamId2);
+        postgresWriteRepository.createShot(dto.getShot(), gameId, playerId);
     }
 
     public void write2Postgres(TeamStat teamStat) {
@@ -81,8 +90,8 @@ public class VersionTwoService {
         return mongoDbReadRepository.query6();
     }
 
-    public void write1Mongo(Player player) {
-        mongoDbWriteRepository.updatePlayer(player);
+    public void write1Mongo(GameDocument gameDocument) {
+        mongoDbWriteRepository.updateTable(gameDocument);
     }
 
     public void write2Mongo(TeamStatMongo teamStatMongo) {

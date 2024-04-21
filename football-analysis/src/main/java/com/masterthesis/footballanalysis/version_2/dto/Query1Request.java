@@ -2,7 +2,9 @@ package com.masterthesis.footballanalysis.version_2.dto;
 
 import lombok.Data;
 
+import java.sql.Timestamp;
+
 @Data
-public class Player {
-    private String name;
+public class Query1Request {
+    private Timestamp date;
 }

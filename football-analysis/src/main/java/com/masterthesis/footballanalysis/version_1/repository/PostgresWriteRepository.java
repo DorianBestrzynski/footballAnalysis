@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 
-@Repository
+@Repository("PostgresWriteRepositoryV1")
 @RequiredArgsConstructor
 public class PostgresWriteRepository {
     private final JdbcTemplate jdbcTemplate;

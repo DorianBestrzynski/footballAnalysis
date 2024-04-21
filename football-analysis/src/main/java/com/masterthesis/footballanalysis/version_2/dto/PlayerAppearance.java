@@ -4,21 +4,20 @@ import lombok.Data;
 
 @Data
 public class PlayerAppearance {
-    private int gameID;
-    private int leagueID;
-    private int time;
     private int goals;
     private int ownGoals;
-    private double xGoals;
+    private int shots;
+    private float xGoals;
+    private float xGoalsChain;
+    private float xGoalsBuildup;
     private int assists;
+    private int keyPasses;
+    private float xAssists;
     private String position;
     private int positionOrder;
-    private double xAssists;
-    private int shots;
-    private int keyPasses;
-    private int yellowCards;
-    private int redCards;
-    private double xGoalsChain;
-    private double xGoalsBuildup;
-
+    private int yellowCard;
+    private int redCard;
+    private int time;
+    private String substituteIn;
+    private String substituteOut;
 }
