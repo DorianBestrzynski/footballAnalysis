@@ -98,7 +98,7 @@ public class MongoDbReadRepository {
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
 
-        List<Query3DTOMongo> query3DTOPostgresList = new ArrayList<>();
+        List<Query3DTOMongo> query3DTOMongoList = new ArrayList<>();
         for (Document doc : result) {
             Query3DTOMongo query3 = new Query3DTOMongo();
             query3.setPlayerId(doc.getInteger("playerID"));
@@ -108,9 +108,9 @@ public class MongoDbReadRepository {
             query3.setLastAction(doc.getString("lastAction"));
             query3.setShotType(doc.getString("shotType"));
             query3.setShotResult(doc.getString("shotResult"));
-            query3DTOPostgresList.add(query3);
+            query3DTOMongoList.add(query3);
         }
-        return query3DTOPostgresList;
+        return query3DTOMongoList;
     }
 
     public List<Query4DTOMongo> query4() {
