@@ -1,7 +1,6 @@
 package com.masterthesis.footballanalysis.version_1_2.service;
 
 import com.masterthesis.footballanalysis.version_1_2.dto.*;
-import com.masterthesis.footballanalysis.version_1_2.repository.MongoDbWriteRepository;
 import com.masterthesis.footballanalysis.version_1_2.repository.MongoDbReadRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,9 +9,8 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class VersionOneService {
+public class VersionOne_TwoService {
     private final MongoDbReadRepository mongoDbReadRepository;
-    private final MongoDbWriteRepository mongoDbWriteRepository;
 
     public List<Query1DTOMongo> query1Mongo(int awayGoals) {
         return mongoDbReadRepository.query1(awayGoals);
@@ -52,17 +50,5 @@ public class VersionOneService {
 
     public List<Query10DTO> query10Mongo() {
         return mongoDbReadRepository.query10();
-    }
-
-    public void write1Mongo(Player player) {
-        mongoDbWriteRepository.updatePlayer(player);
-    }
-
-    public void write2Mongo(TeamStatMongo teamStatMongo) {
-        mongoDbWriteRepository.updateTeamStats(teamStatMongo);
-    }
-
-    public void write3Mongo(Game game) {
-        mongoDbWriteRepository.updateGame(game);
     }
 }

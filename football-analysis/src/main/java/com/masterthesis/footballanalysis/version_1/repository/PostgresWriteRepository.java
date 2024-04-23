@@ -1,6 +1,5 @@
 package com.masterthesis.footballanalysis.version_1.repository;
 
-import com.masterthesis.footballanalysis.player.team.dto.TeamStat;
 import com.masterthesis.footballanalysis.version_1.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;

@@ -1,9 +1,8 @@
 package com.masterthesis.footballanalysis.version_1_2.controller;
 
 import com.masterthesis.footballanalysis.version_1_2.dto.*;
-import com.masterthesis.footballanalysis.version_1_2.service.VersionOneService;
+import com.masterthesis.footballanalysis.version_1_2.service.VersionOne_TwoService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,8 +11,8 @@ import java.util.List;
 @RestController
 @RequestMapping("api/v1_2/game")
 @RequiredArgsConstructor
-public class VersionOneController {
-    private final VersionOneService service;
+public class VersionOne_TwoController {
+    private final VersionOne_TwoService service;
 
     @GetMapping("/mongo/query-1")
     public ResponseEntity<List<Query1DTOMongo>> query1Mongo(@RequestParam int awayGoals) {
@@ -73,23 +72,5 @@ public class VersionOneController {
     public ResponseEntity<List<Query10DTO>> query10Mongo() {
         var result = service.query10Mongo();
         return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/mongo/write-1")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void write1Mongo(@RequestBody Player player) {
-        service.write1Mongo(player);
-    }
-
-    @PostMapping("/mongo/write-2")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void write2Mongo(@RequestBody TeamStatMongo teamStatMongo) {
-        service.write2Mongo(teamStatMongo);
-    }
-
-    @PostMapping("/mongo/write-3")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void write3Mongo(@RequestBody Game game) {
-        service.write3Mongo(game);
     }
 }
