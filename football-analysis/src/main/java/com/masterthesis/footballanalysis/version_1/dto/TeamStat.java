@@ -1,4 +1,4 @@
-package com.masterthesis.footballanalysis.player.team.dto;
+package com.masterthesis.footballanalysis.version_1.dto;
 
 import lombok.Data;
 

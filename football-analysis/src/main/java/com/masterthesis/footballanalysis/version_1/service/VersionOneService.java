@@ -1,6 +1,5 @@
 package com.masterthesis.footballanalysis.version_1.service;
 
-import com.masterthesis.footballanalysis.player.team.dto.TeamStat;
 import com.masterthesis.footballanalysis.version_1.dto.*;
 import com.masterthesis.footballanalysis.version_1.repository.MongoDbReadRepository;
 import com.masterthesis.footballanalysis.version_1.repository.MongoDbWriteRepository;

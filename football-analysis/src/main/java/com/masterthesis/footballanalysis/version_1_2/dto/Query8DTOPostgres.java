@@ -1,12 +1,11 @@
-package com.masterthesis.footballanalysis.player.team.dto;
+package com.masterthesis.footballanalysis.version_1_2.dto;
 
 import lombok.Data;
 
 import java.sql.Timestamp;
-import java.time.Instant;
 
 @Data
-public class GameStats {
+public class Query8DTOPostgres {
     private String leagueName;
     private String matchName;
     private Timestamp date;

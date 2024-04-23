@@ -1,12 +1,11 @@
-package com.masterthesis.footballanalysis.player.team.dto;
+package com.masterthesis.footballanalysis.version_1_2.dto;
 
 import lombok.Data;
 
 import java.sql.Timestamp;
 
 @Data
-public class TeamStatMongo {
-    Integer leagueId;
+public class TeamStat {
     private Integer gameID;
     private Integer teamID;
     private Integer season;

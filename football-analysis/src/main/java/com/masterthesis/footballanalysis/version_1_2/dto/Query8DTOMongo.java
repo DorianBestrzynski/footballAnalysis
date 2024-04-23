@@ -1,11 +1,9 @@
-package com.masterthesis.footballanalysis.player.team.dto;
+package com.masterthesis.footballanalysis.version_1_2.dto;
 
 import lombok.Data;
 
-import java.util.Date;
-
 @Data
-public class GameStatsMongo {
+public class Query8DTOMongo {
     private String leagueName;
     private String matchName;
     private String date;
