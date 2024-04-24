@@ -51,4 +51,8 @@ public class VersionOne_TwoService {
     public List<Query10DTO> query10Mongo() {
         return mongoDbReadRepository.query10();
     }
+
+    public List<Query11DTO> query11Mongo() {
+        return mongoDbReadRepository.query11();
+    }
 }

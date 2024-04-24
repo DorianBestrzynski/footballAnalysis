@@ -75,6 +75,12 @@ public class VersionOneController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/pg/query-11")
+    public ResponseEntity<List<Query11DTO>> query11Pg() {
+        var result = service.query11Postgres();
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping("/pg/write-1")
     @ResponseStatus(HttpStatus.CREATED)
     public void write1Pg(@RequestBody Player player) {
@@ -150,6 +156,12 @@ public class VersionOneController {
     @GetMapping("/mongo/query-10")
     public ResponseEntity<List<Query10DTO>> query10Mongo() {
         var result = service.query10Mongo();
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/mongo/query-11")
+    public ResponseEntity<List<Query11DTO>> query11Mongo() {
+        var result = service.query11Mongo();
         return ResponseEntity.ok(result);
     }
 

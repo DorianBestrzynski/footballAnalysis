@@ -194,4 +194,21 @@ public class PostgresReadRepository {
             return query10;
         });
     }
+
+    public List<Query11DTO> query11() {
+        String query = "SELECT p.name, s.situation, s.shotResult " +
+                "FROM players p " +
+                "JOIN shots s ON s.shooterId = p.playerId " +
+                "WHERE s.shotResult = 'Goal' " +
+                "GROUP BY p.name, s.situation, s.shotResult ";
+
+        return jdbcTemplate.query(query, (rs, rowNum) -> {
+            Query11DTO query11 = new Query11DTO();
+            query11.setPlayerName(rs.getString("name"));
+            query11.setSituation(rs.getString("situation"));
+            query11.setShotResult(rs.getString("shotResult"));
+            return query11;
+        });
+    }
 }
+

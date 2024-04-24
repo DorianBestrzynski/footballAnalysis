@@ -387,4 +387,39 @@ public class MongoDbReadRepository {
         }
         return query10DTOS;
     }
+
+    public List<Query11DTO> query11() {
+        // Get the collection you want to query
+        MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
+
+        // Define your aggregation pipeline
+        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+                        new Document("path", "$shots")
+                                .append("preserveNullAndEmptyArrays", false)),
+                new Document("$match",
+                        new Document("shots.shotResult", "Goal")),
+                new Document("$group",
+                        new Document("_id",
+                                new Document("name", "$name")
+                                        .append("situation", "$shots.situation")
+                                        .append("shotResult", "$shots.shotResult"))),
+                new Document("$project",
+                        new Document("_id", 0L)
+                                .append("name", "$_id.name")
+                                .append("situation", "$_id.situation")
+                                .append("shotResult", "$_id.shotResult")));
+
+        // Execute the aggregation pipeline
+        AggregateIterable<Document> result = collection.aggregate(pipeline);
+
+        List<Query11DTO> query11DTOS = new ArrayList<>();
+        for (Document doc : result) {
+            Query11DTO query11 = new Query11DTO();
+            query11.setPlayerName(doc.getString("name"));
+            query11.setSituation(doc.getString("situation"));
+            query11.setShotResult(doc.getString("shotResult"));
+            query11DTOS.add(query11);
+        }
+        return query11DTOS;
+    }
 }

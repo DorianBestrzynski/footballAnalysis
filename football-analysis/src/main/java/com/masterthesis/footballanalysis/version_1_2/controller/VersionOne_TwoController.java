@@ -73,4 +73,10 @@ public class VersionOne_TwoController {
         var result = service.query10Mongo();
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/mongo/query-11")
+    public ResponseEntity<List<Query11DTO>> query11Mongo() {
+        var result = service.query11Mongo();
+        return ResponseEntity.ok(result);
+    }
 }

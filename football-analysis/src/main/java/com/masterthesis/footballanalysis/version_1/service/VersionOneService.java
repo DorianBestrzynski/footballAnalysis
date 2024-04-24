@@ -59,6 +59,10 @@ public class VersionOneService {
         return postgresReadRepository.query10();
     }
 
+    public List<Query11DTO> query11Postgres() {
+        return postgresReadRepository.query11();
+    }
+
     public void write1Postgres(Player player) {
         postgresWriteRepository.createPlayerAndAppearancesAndShots(player);
     }
@@ -109,6 +113,10 @@ public class VersionOneService {
 
     public List<Query10DTO> query10Mongo() {
         return mongoDbReadRepository.query10();
+    }
+
+    public List<Query11DTO> query11Mongo() {
+        return mongoDbReadRepository.query11();
     }
 
     public void write1Mongo(Player player) {
