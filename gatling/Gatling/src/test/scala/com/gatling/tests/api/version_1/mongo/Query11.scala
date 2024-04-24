@@ -1,13 +1,13 @@
 
 
-package com.gatling.tests.api.version_1.postgres
+package com.gatling.tests.api.version_1.mongo
 
 import io.gatling.core.Predef._
 import io.gatling.core.structure.ScenarioBuilder
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
-class Query10 extends Simulation {
+class Query11 extends Simulation {
   val httpProtocol: HttpProtocolBuilder = http
     .baseUrl("http://localhost:8080")
 
@@ -16,23 +16,23 @@ class Query10 extends Simulation {
     .group("WARM UP") {
       // Repeat the following block 5 times
       exec(
-        http("Query 10")
-          .get("/api/v1/game/pg/query-10")
+        http("Query 11")
+          .get("/api/v1/game/mongo/query-11")
           .silent
       )
         .exec(
-          http("Query 10")
-            .get("/api/v1/game/pg/query-10")
+          http("Query 11")
+            .get("/api/v1/game/mongo/query-11")
             .silent
         )
     }
 
   // Actual test scenario
-  val testScenario: ScenarioBuilder = scenario("Test Query 10")
+  val testScenario: ScenarioBuilder = scenario("Test Query 11")
     .repeat(5) { // Repeat the following block 5 times
       exec(
-        http("Query 10")
-          .get("/api/v1/game/pg/query-10")
+        http("Query 11")
+          .get("/api/v1/game/mongo/query-11")
           .check(status.is(200))
       )
     } // Repeat the request 5 times for the actual test

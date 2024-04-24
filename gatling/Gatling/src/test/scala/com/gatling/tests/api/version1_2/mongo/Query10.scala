@@ -21,7 +21,7 @@ class Query10 extends Simulation {
           .silent
       )
         .exec(
-          http("Query 3")
+          http("Query 10")
             .get("/api/v1_2/game/mongo/query-10")
             .silent
         )
