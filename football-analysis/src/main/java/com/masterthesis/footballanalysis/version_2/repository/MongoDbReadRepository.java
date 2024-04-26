@@ -3,6 +3,7 @@ package com.masterthesis.footballanalysis.version_2.repository;
 
 import com.masterthesis.footballanalysis.version_2.dto.*;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import lombok.RequiredArgsConstructor;
@@ -23,21 +24,15 @@ public class MongoDbReadRepository {
     public List<Query1DTOMongo> query1(Timestamp date) {
         MongoCollection<Document> collection = database.getCollection("Statistics");
 
-        List<Document> pipeline = Arrays.asList(new Document("$match",
-                        new Document("date",
-                                new Document("$gt", date.toString()))),
-                new Document("$project",
-                        new Document("gameID", 1L)
-                                .append("leagueName", 1L)
-                                .append("season", 1L)
-                                .append("date", 1L)
-                                .append("homeTeamID", 1L)
-                                .append("awayTeamID", 1L)
-                                .append("homeGoals", 1L)
-                                .append("awayGoals", 1L)));
-
-        // Execute the aggregation pipeline
-        AggregateIterable<Document> result = collection.aggregate(pipeline);
+        FindIterable<Document> result = collection.find(new Document("date", new Document("$gt", date)))
+                .projection(new Document("gameID", 1L)
+                        .append("leagueName", 1L)
+                        .append("season", 1L)
+                        .append("date", 1L)
+                        .append("homeTeamID", 1L)
+                        .append("awayTeamID", 1L)
+                        .append("homeGoals", 1L)
+                        .append("awayGoals", 1L));
 
         List<Query1DTOMongo> query1List = new ArrayList<>();
         for (Document doc : result) {
@@ -137,7 +132,8 @@ public class MongoDbReadRepository {
                                 .append("shotResult", "$shots.shotResult")
                                 .append("playerName", "$shots. name")
                                 .append("playerGoals", "$appearances.goals")
-                                .append("playerShots", "$appearances.shots")));
+                                .append("playerShots", "$appearances.shots")),
+                new Document("$limit", 1000));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);

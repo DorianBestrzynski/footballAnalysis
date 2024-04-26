@@ -3,6 +3,7 @@ package com.masterthesis.footballanalysis.version_1_2.repository;
 
 import com.masterthesis.footballanalysis.version_1_2.dto.*;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import lombok.RequiredArgsConstructor;
@@ -23,21 +24,15 @@ public class MongoDbReadRepository {
     public List<Query1DTOMongo> query1(int awayGoals) {
         MongoCollection<Document> collection = database.getCollection(STATISTICS_COLLECTION);
 
-        List<Document> pipeline = Arrays.asList(new Document("$match",
-                        new Document("awayGoals",
-                                new Document("$gt", awayGoals))),
-                new Document("$project",
-                        new Document("gameID", 1L)
-                                .append("leagueName", 1L)
-                                .append("season", 1L)
-                                .append("date", 1L)
-                                .append("homeTeamID", 1L)
-                                .append("awayTeamID", 1L)
-                                .append("homeGoals", 1L)
-                                .append("awayGoals", 1L)));
-
-        // Execute the aggregation pipeline
-        AggregateIterable<Document> result = collection.aggregate(pipeline);
+        FindIterable<Document> result = collection.find(new Document("awayGoals", new Document("$gt", awayGoals)))
+                .projection(new Document("gameID", 1L)
+                        .append("leagueName", 1L)
+                        .append("season", 1L)
+                        .append("date", 1L)
+                        .append("homeTeamID", 1L)
+                        .append("awayTeamID", 1L)
+                        .append("homeGoals", 1L)
+                        .append("awayGoals", 1L));
 
         List<Query1DTOMongo> query1List = new ArrayList<>();
         for (Document doc : result) {
@@ -55,18 +50,13 @@ public class MongoDbReadRepository {
 
     public List<Query2DTO> query2() {
         MongoCollection<Document> collection = database.getCollection(STATISTICS_COLLECTION);
-        List<Document> pipeline = Arrays.asList(new Document("$match",
-                        new Document("homeTeam.teamStats.location_home", "h")),
-                new Document("$project",
-                        new Document("location", "$homeTeam.teamStats.location_home")
-                                .append("goals", "$homeTeam.teamStats.goals_home")
-                                .append("xGoals", "$homeTeam.teamStats.xGoals_home")
-                                .append("shots", "$homeTeam.teamStats.shots_home")
-                                .append("shotsOnTarget", "$homeTeam.teamStats.shotsOnTarget_home")
-                                .append("deep", "$homeTeam.teamStats.deep_home")));
-
-        // Execute the aggregation pipeline
-        AggregateIterable<Document> result = collection.aggregate(pipeline);
+        FindIterable<Document> result = collection.find(new Document("homeTeam.teamStats.location_home", "h"))
+                .projection(new Document("homeTeam.teamStats.location_home", 1)
+                        .append("homeTeam.teamStats.goals_home", 1)
+                        .append("homeTeam.teamStats.xGoals_home", 1)
+                        .append("homeTeam.teamStats.shots_home", 1)
+                        .append("homeTeam.teamStats.shotsOnTarget_home", 1)
+                        .append("homeTeam.teamStats.deep_home", 1));
 
         List<Query2DTO> query2List = new ArrayList<>();
         for (Document doc : result) {
