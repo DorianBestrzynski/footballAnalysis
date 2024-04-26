@@ -32,7 +32,8 @@ public class MongoDbReadRepository {
                         .append("homeTeamID", 1L)
                         .append("awayTeamID", 1L)
                         .append("homeGoals", 1L)
-                        .append("awayGoals", 1L));
+                        .append("awayGoals", 1L))
+                .limit(10);
 
         List<Query1DTOMongo> query1List = new ArrayList<>();
         for (Document doc : result) {
@@ -62,7 +63,8 @@ public class MongoDbReadRepository {
                         new Document("goals", -1L)
                                 .append("assists", -1L)
                                 .append("shots", -1L)
-                                .append("ownGoals", -1L)));
+                                .append("ownGoals", -1L)),
+                new Document("$limit", 10));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -90,7 +92,8 @@ public class MongoDbReadRepository {
                                 .append("minute", "$shots.minute")
                                 .append("situation", "$shots.situation")
                                 .append("shotType", "$shots.shotType")
-                                .append("shotResult", "$shots.shotResult")));
+                                .append("shotResult", "$shots.shotResult")),
+                new Document("$limit", 10));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -133,12 +136,13 @@ public class MongoDbReadRepository {
                                 .append("playerName", "$shots. name")
                                 .append("playerGoals", "$appearances.goals")
                                 .append("playerShots", "$appearances.shots")),
-                new Document("$limit", 1000));
+                new Document("$limit", 10));
 
         // Execute the aggregation pipeline
-        AggregateIterable<Document> result = collection.aggregate(pipeline);
+        var result = collection.aggregate(pipeline);
 
         List<Query4DTOMongo> query4DTOMongos = new ArrayList<>();
+        System.out.println("Collection done, performing creating DTO's");
         for (Document doc : result) {
             Query4DTOMongo query4 = new Query4DTOMongo();
             query4.setDate(doc.getString("date"));
@@ -184,7 +188,8 @@ public class MongoDbReadRepository {
                                 .append("_id", 0L)),
                 new Document("$sort",
                         new Document("date", -1L)
-                                .append("goalsScored", -1L)));
+                                .append("goalsScored", -1L)),
+                new Document("$limit", 10));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -263,7 +268,8 @@ public class MongoDbReadRepository {
                                 .append("startingPlayers", 1L)
                                 .append("substitutedPlayers", 1L)),
                 new Document("$sort",
-                        new Document("date", -1L)));
+                        new Document("date", -1L)),
+                new Document("$limit", 10));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
