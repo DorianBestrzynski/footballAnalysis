@@ -326,18 +326,23 @@ public class MongoDbReadRepository {
         MongoCollection<Document> collection = database.getCollection(STATISTICS_COLLECTION);
 
         // Define your aggregation pipeline
-        List<Document> pipeline = Arrays.asList(new Document("$match",
-                        new Document("date",
-                                new Document("$gt", "2018-04-02T15:00:00Z"))),
+        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+                        new Document("path", "$appearances")
+                                .append("preserveNullAndEmptyArrays", false)),
+                new Document("$group",
+                        new Document("_id",
+                                new Document("name", "$appearances. name")
+                                        .append("season", "$season"))
+                                .append("TotalGoals",
+                                        new Document("$sum", "$appearances.goals"))),
                 new Document("$project",
-                        new Document("gameID", 1L)
-                                .append("leagueName", 1L)
-                                .append("season", 1L)
-                                .append("date", 1L)
-                                .append("homeTeamID", 1L)
-                                .append("awayTeamID", 1L)
-                                .append("homeGoals", 1L)
-                                .append("awayGoals", 1L)));
+                        new Document("_id", 0L)
+                                .append("PlayerName", "$_id.name")
+                                .append("Season", "$_id.season")
+                                .append("TotalGoals", 1L)),
+                new Document("$sort",
+                        new Document("Season", 1L)
+                                .append("TotalGoals", -1L)));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
