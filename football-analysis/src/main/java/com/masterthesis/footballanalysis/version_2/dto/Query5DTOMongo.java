@@ -9,6 +9,6 @@ public class Query5DTOMongo {
     private int gameId;
     private String date;
     private int season;
-    private int totalShots;
-    private int goalsScored;
+    private long totalShots;
+    private long goalsScored;
 }

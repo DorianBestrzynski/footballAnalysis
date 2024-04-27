@@ -200,8 +200,8 @@ public class MongoDbReadRepository {
             query5.setGameId(doc.getInteger("gameID"));
             query5.setDate(doc.getString("date"));
             query5.setSeason(doc.getInteger("season"));
-            query5.setTotalShots(doc.getInteger("totalShots"));
-            query5.setGoalsScored(doc.getInteger("goalsScored"));
+            query5.setTotalShots(doc.getLong("totalShots"));
+            query5.setGoalsScored(doc.getLong("goalsScored"));
             query5DTOs.add(query5);
         }
         return query5DTOs;
@@ -229,7 +229,7 @@ public class MongoDbReadRepository {
                                         .append("minute", "$shots.minute")
                                         .append("situation", "$shots.situation")
                                         .append("shotResult", "$shots.shotResult")
-                                        .append("playerName", "$shots.name")
+                                        .append("playerName", "$shots. name")
                                         .append("playerGoals", "$appearances.goals")
                                         .append("playerShots", "$appearances.shots"))
                                 .append("totalShots",
@@ -238,15 +238,7 @@ public class MongoDbReadRepository {
                                         new Document("$sum",
                                                 new Document("$cond", Arrays.asList(new Document("$eq", Arrays.asList("$shots.shotResult", "Goal")), 1L, 0L))))
                                 .append("avgShotsPerPlayer",
-                                        new Document("$avg", "$appearances.shots"))
-                                .append("startingPlayers",
-                                        new Document("$sum",
-                                                new Document("$cond", Arrays.asList(new Document("$eq", Arrays.asList("$appearances.substitutein",
-                                                        new BsonNull())), 1L, 0L))))
-                                .append("substitutedPlayers",
-                                        new Document("$sum",
-                                                new Document("$cond", Arrays.asList(new Document("$ne", Arrays.asList("$appearances.substitutein",
-                                                        new BsonNull())), 1L, 0L))))),
+                                        new Document("$avg", "$appearances.shots"))),
                 new Document("$project",
                         new Document("date", "$_id.date")
                                 .append("season", "$_id.season")
@@ -264,17 +256,15 @@ public class MongoDbReadRepository {
                                 .append("playerShots", "$_id.playerShots")
                                 .append("totalShots", 1L)
                                 .append("totalGoals", 1L)
-                                .append("avgShotsPerPlayer", 1L)
-                                .append("startingPlayers", 1L)
-                                .append("substitutedPlayers", 1L)),
+                                .append("avgShotsPerPlayer", 1L)),
                 new Document("$sort",
                         new Document("date", -1L)),
                 new Document("$limit", 10));
 
         // Execute the aggregation pipeline
-        AggregateIterable<Document> result = collection.aggregate(pipeline);
-
+        var result = collection.aggregate(pipeline);
         List<Query6DTOMongo> query6DTOS = new ArrayList<>();
+        System.out.println("Query 6 mapping started");
         for (Document doc : result) {
             Query6DTOMongo query6 = new Query6DTOMongo();
             query6.setDate(doc.getString("date"));
@@ -283,16 +273,14 @@ public class MongoDbReadRepository {
             query6.setLeagueName(doc.getString("leagueName"));
             query6.setResult(doc.getString("result"));
             query6.setAvgShotsPerPlayer(doc.getDouble("avgShotsPerPlayer"));
-            query6.setTotalShots(doc.getInteger("totalShots"));
-            query6.setTotalGoals(doc.getInteger("totalGoals"));
+            query6.setTotalShots(doc.getLong("totalShots"));
+            query6.setTotalGoals(doc.getLong("totalGoals"));
             query6.setMinute(doc.getInteger("minute"));
             query6.setSituation(doc.getString("situation"));
             query6.setShotResult(doc.getString("shotResult"));
             query6.setPlayerName(doc.getString("playerName"));
             query6.setPlayerGoals(doc.getInteger("playerGoals"));
             query6.setPlayerShots(doc.getInteger("playerShots"));
-            query6.setStartingPlayers(doc.getInteger("startingPlayers"));
-            query6.setSubstitutedPlayers(doc.getInteger("substitutedPlayers"));
             query6DTOS.add(query6);
         }
         return query6DTOS;

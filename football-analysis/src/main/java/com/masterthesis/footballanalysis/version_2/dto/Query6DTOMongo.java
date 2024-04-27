@@ -12,14 +12,14 @@ public class Query6DTOMongo {
     private String leagueName;
     private String result;
     private double avgShotsPerPlayer;
-    private int totalShots;
-    private int totalGoals;
+    private long totalShots;
+    private long totalGoals;
     private int minute;
     private String situation;
     private String shotResult;
     private String playerName;
     private int playerGoals;
     private int playerShots;
-    private int startingPlayers;
-    private int substitutedPlayers;
+    private long startingPlayers;
+    private long substitutedPlayers;
 }

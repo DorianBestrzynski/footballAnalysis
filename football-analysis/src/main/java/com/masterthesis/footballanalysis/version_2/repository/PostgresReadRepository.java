@@ -120,9 +120,7 @@ public class PostgresReadRepository {
         String query = "SELECT g.date, g.season, CONCAT(ht.name, ' vs ', at.name) AS Match, " +
                 "l.name AS LeagueName, CONCAT(ts_h.goals, ' : ', ts_a.goals) AS Result, " +
                 "AVG(a.shots) AS AvgShotsPerPlayer, SUM(s.shotId) AS TotalShots, SUM(CASE WHEN s.shotResult = 'Goal' THEN 1 ELSE 0 END) AS TotalGoals, " +
-                "s.minute, s.situation, s.shotResult, p.name AS PlayerName, a.goals AS PlayerGoals, a.shots AS PlayerShots, " +
-                "COUNT(DISTINCT CASE WHEN a.substitutein IS NULL THEN a.playerID ELSE NULL END) AS StartingPlayers, " +
-                "COUNT(DISTINCT CASE WHEN a.substitutein IS NOT NULL THEN a.playerID ELSE NULL END) AS SubstitutedPlayers " +
+                "s.minute, s.situation, s.shotResult, p.name AS PlayerName, a.goals AS PlayerGoals, a.shots AS PlayerShots " +
                 "FROM games g " +
                 "JOIN shots s ON g.gameid = s.gameid " +
                 "JOIN players p ON p.playerId = s.shooterId " +
@@ -152,8 +150,6 @@ public class PostgresReadRepository {
             query6.setPlayerName(rs.getString("PlayerName"));
             query6.setPlayerGoals(rs.getInt("PlayerGoals"));
             query6.setPlayerShots(rs.getInt("PlayerShots"));
-            query6.setStartingPlayers(rs.getInt("StartingPlayers"));
-            query6.setSubstitutedPlayers(rs.getInt("SubstitutedPlayers"));
             return query6;
         });
     }
