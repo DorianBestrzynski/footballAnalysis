@@ -13,7 +13,7 @@ import scala.util.{Random, Using}
 
 class Write1 extends Simulation {
   def loadIdsFromFile(filePath: String): List[String] = {
-    Using(Source.fromFile(filePath)) { source =>
+    Using(Source.fromResource(filePath)) { source =>
       source.getLines().drop(1).toList // Pomijamy pierwszą linię (nagłówek)
     }.getOrElse {
       throw new RuntimeException(s"Failed to load data from $filePath")
@@ -115,7 +115,7 @@ class Write1 extends Simulation {
   }
 
   val updateTeamStatScenario: ScenarioBuilder = scenario("Create Player")
-    .repeat(1) {
+    .repeat(10) {
       exec(session => {
         val updateBody = generateUpdateBody()
         session.set("updateBody", updateBody)

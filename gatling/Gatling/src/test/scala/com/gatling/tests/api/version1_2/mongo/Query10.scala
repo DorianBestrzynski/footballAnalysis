@@ -29,7 +29,7 @@ class Query10 extends Simulation {
 
   // Actual test scenario
   val testScenario: ScenarioBuilder = scenario("Test Query 10")
-    .repeat(5) { // Repeat the following block 5 times
+    .repeat(20) { // Repeat the following block 5 times
       exec(
         http("Query 10")
           .get("/api/v1_2/game/mongo/query-10")

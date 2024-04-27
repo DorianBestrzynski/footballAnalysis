@@ -43,7 +43,7 @@ class Write3 extends Simulation {
   }
 
   val updateTeamStatScenario: ScenarioBuilder = scenario("Create Game")
-    .repeat(1) {
+    .repeat(100) {
       exec(session => {
         val updateBody = generateUpdateBody()
         session.set("updateBody", updateBody)
@@ -55,7 +55,7 @@ class Write3 extends Simulation {
         )
     }
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
+    updateTeamStatScenario.inject(atOnceUsers(100)) // Execute the scenario for one user
   ).protocols(httpProtocol)
 }
 

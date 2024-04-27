@@ -13,7 +13,7 @@ import scala.util.{Random, Using}
 class Write2 extends Simulation {
 
   def loadIdsFromFile(filePath: String): List[String] = {
-    Using(Source.fromFile(filePath)) { source =>
+    Using(Source.fromResource(filePath)) { source =>
       source.getLines().drop(1).toList // Pomijamy pierwszą linię (nagłówek)
     }.getOrElse {
       throw new RuntimeException(s"Failed to load data from $filePath")

@@ -15,7 +15,7 @@ import scala.util.{Random, Using}
 
 class Write1 extends Simulation {
   def loadIdsFromFile(filePath: String): List[String] = {
-    Using(Source.fromFile(filePath)) { source =>
+    Using(Source.fromResource(filePath)) { source =>
       source.getLines().drop(1).toList // Pomijamy pierwszą linię (nagłówek)
     }.getOrElse {
       throw new RuntimeException(s"Failed to load data from $filePath")
@@ -120,8 +120,8 @@ class Write1 extends Simulation {
   // Main method to generate the full JSON body
   def generateUpdateBody(): String = {
     val gameId = Random.nextInt(100) + 1
-    val appearances = (1 to 100).map(_ => generateAppearance(gameId)).mkString("[", ",", "]")
-    val shots = (1 to 100).map(_ => generateShots(gameId)).mkString("[", ",", "]")
+    val appearances = (1 to 2).map(_ => generateAppearance(gameId)).mkString("[", ",", "]")
+    val shots = (1 to 2).map(_ => generateShots(gameId)).mkString("[", ",", "]")
 
     s"""{
     "gameId": $gameId,
@@ -151,7 +151,7 @@ class Write1 extends Simulation {
   }
 
   val updateTeamStatScenario: ScenarioBuilder = scenario("Create Table")
-    .repeat(1) {
+    .repeat(500) {
       exec(session => {
         val updateBody = generateUpdateBody()
         Files.write(Paths.get("teamStatsJson.txt"), updateBody.getBytes(StandardCharsets.UTF_8))
@@ -164,6 +164,6 @@ class Write1 extends Simulation {
         )
     }
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
+    updateTeamStatScenario.inject(atOnceUsers(20)) // Execute the scenario for one user
   ).protocols(httpProtocol)
 }

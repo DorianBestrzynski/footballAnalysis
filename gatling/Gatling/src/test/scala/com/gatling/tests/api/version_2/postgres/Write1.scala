@@ -14,6 +14,14 @@ import scala.util.{Random, Using}
 
 
 class Write1 extends Simulation {
+  def loadIdsFromFile(filePath: String): List[String] = {
+    Using(Source.fromResource(filePath)) { source =>
+      source.getLines().drop(1).toList // Pomijamy pierwszą linię (nagłówek)
+    }.getOrElse {
+      throw new RuntimeException(s"Failed to load data from $filePath")
+    }
+  }
+  val playerIds: List[String] = loadIdsFromFile("playerIds.csv")
 
   def randomString(length: Int): String = {
     val chars = ('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9')
@@ -115,10 +123,13 @@ class Write1 extends Simulation {
   }
 
   def generateShot(): String = {
+    val playerId = Random.shuffle(playerIds).head
+    val assisterId = Random.shuffle(playerIds).head
+
     s"""{
     "gameId": 101,
-    "shooterId": ${Random.nextInt(50)},
-    "assisterId": ${Random.nextInt(50)},
+    "shooterId": $playerId,
+    "assisterId": $assisterId,
     "minute": ${Random.nextInt(90)},
     "situation": "OpenPlay",
     "lastAction": "Pass",
@@ -146,7 +157,7 @@ class Write1 extends Simulation {
   }
 
   val updateTeamStatScenario: ScenarioBuilder = scenario("Create Player")
-    .repeat(1) {
+    .repeat(500) {
       exec(session => {
         val updateBody = generateUpdateBody()
         Files.write(Paths.get("teamStatsJson.txt"), updateBody.getBytes(StandardCharsets.UTF_8))
@@ -159,6 +170,6 @@ class Write1 extends Simulation {
         )
     }
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
+    updateTeamStatScenario.inject(atOnceUsers(20)) // Execute the scenario for one user
   ).protocols(httpProtocol)
 }
