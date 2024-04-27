@@ -4,7 +4,6 @@ import com.masterthesis.footballanalysis.version_1.dto.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.UpdateOptions;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -25,12 +24,7 @@ public class MongoDbWriteRepository {
     public void updatePlayer(Player player) {
         MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
 
-        // Insert or update the player document into the collection
-        var filter = new Document("playerID", player.getPlayerId());
-        var  update = new Document("$set", player(player));
-        UpdateOptions options = new UpdateOptions().upsert(true); // This will insert the document if it doesn't exist, or update it if it does
-
-        collection.updateOne(filter, update, options);
+        collection.insertOne(player(player));
     }
 
     private Document player(Player player) {
@@ -137,13 +131,7 @@ public class MongoDbWriteRepository {
 
     public void updateGame(Game game) {
         MongoCollection<Document> collection = database.getCollection("Game_Leagues_Teams_TeamStats");
-
-        // Insert or update the player document into the collection
-        var filter = new Document("gameID", game.getGameId());
-        var  update = new Document("$set", game(game));
-        UpdateOptions options = new UpdateOptions().upsert(true); // This will insert the document if it doesn't exist, or update it if it does
-
-        collection.updateOne(filter, update, options);
+        collection.insertOne(game(game));
     }
 
     private Document game(Game game) {

@@ -4,13 +4,11 @@ import com.masterthesis.footballanalysis.version_2.dto.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.UpdateOptions;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,19 +22,7 @@ public class MongoDbWriteRepository {
 
     public void updateTable(GameDocument gameDocument) {
         MongoCollection<Document> collection = database.getCollection("games");
-        int gameId = gameDocument.getGameId();
-
-        // Create filter for the update operation
-        Document filter = new Document("gameID", gameId);
-
-        // Convert the DTO to a MongoDB document
-        Document updateDoc = new Document("$set", gameDocumentToMongoDocument(gameDocument));
-
-        // Set options to upsert (update existing document or insert if not exists)
-        UpdateOptions options = new UpdateOptions().upsert(true);
-
-        // Execute the update operation
-        collection.updateOne(filter, updateDoc, options);
+        collection.insertOne(gameDocumentToMongoDocument(gameDocument));
     }
 
     private Document gameDocumentToMongoDocument(GameDocument gameDocument) {
@@ -180,13 +166,7 @@ public class MongoDbWriteRepository {
 
     public void updateGame(Game game) {
         MongoCollection<Document> collection = database.getCollection("Statistics");
-
-        // Insert or update the player document into the collection
-        var filter = new Document("gameID", game.getGameId());
-        var  update = new Document("$set", game(game));
-        UpdateOptions options = new UpdateOptions().upsert(true); // This will insert the document if it doesn't exist, or update it if it does
-
-        collection.updateOne(filter, update, options);
+        collection.insertOne(game(game));
     }
 
     private Document game(Game game) {
