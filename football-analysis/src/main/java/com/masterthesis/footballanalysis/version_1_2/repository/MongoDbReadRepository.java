@@ -33,7 +33,7 @@ public class MongoDbReadRepository {
                         .append("awayTeamID", 1L)
                         .append("homeGoals", 1L)
                         .append("awayGoals", 1L))
-                .limit(10);
+                .limit(100);
 
         List<Query1DTOMongo> query1List = new ArrayList<>();
         for (Document doc : result) {
@@ -58,7 +58,7 @@ public class MongoDbReadRepository {
                         .append("homeTeam.teamStats.shots_home", 1)
                         .append("homeTeam.teamStats.shotsOnTarget_home", 1)
                         .append("homeTeam.teamStats.deep_home", 1))
-                .limit(10);
+                .limit(100);
 
         List<Query2DTO> query2List = new ArrayList<>();
         for (Document doc : result) {
@@ -88,7 +88,7 @@ public class MongoDbReadRepository {
                                 .append("lastAction", "$shots.lastAction")
                                 .append("shotType", "$shots.shotType")
                                 .append("shotResult", "$shots.shotResult")),
-                new Document("$limit", 10));
+                new Document("$limit", 100000));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -119,7 +119,7 @@ public class MongoDbReadRepository {
                                 .append("Shots", "$homeTeam.teamStats.shots_home")),
                 new Document("$sort",
                         new Document("Shots", -1L)),
-                new Document("$limit", 10));
+                new Document("$limit", 100));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -147,7 +147,7 @@ public class MongoDbReadRepository {
                                 .append("season", "$season")
                                 .append("shotType", "$shots.shotType")
                                 .append("shotResult", "$shots.shotResult")),
-                new Document("$limit", 10));
+                new Document("$limit", 100));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -175,7 +175,7 @@ public class MongoDbReadRepository {
                                 .append("season", "$season")
                                 .append("leagueName", "$leagueName")
                                 .append("goals", "$appearances.goals")),
-                new Document("$limit", 10));
+                new Document("$limit", 100000));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -218,7 +218,7 @@ public class MongoDbReadRepository {
                                 new Document("$gt", 5L))),
                 new Document("$sort",
                         new Document("AvgAssistsPerGame", -1L)),
-                new Document("$limit", 10));
+                new Document("$limit", 100));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -266,7 +266,7 @@ public class MongoDbReadRepository {
                                 .append("GameID", "$_id.GameID")),
                 new Document("$sort",
                         new Document("TotalShots", -1L)),
-                new Document("$limit", 10));
+                new Document("$limit", 100));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -304,7 +304,7 @@ public class MongoDbReadRepository {
                                 .append("TotalXGoal", 1L)),
                 new Document("$sort",
                         new Document("TotalXGoal", -1L)),
-                new Document("$limit", 10));
+                new Document("$limit", 100));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -342,7 +342,7 @@ public class MongoDbReadRepository {
                 new Document("$sort",
                         new Document("Season", 1L)
                                 .append("TotalGoals", -1L)),
-                new Document("$limit", 10));
+                new Document("$limit", 100));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -378,7 +378,7 @@ public class MongoDbReadRepository {
                                 .append("name", "$_id.name")
                                 .append("situation", "$_id.situation")
                                 .append("shotResult", "$_id.shotResult")),
-                new Document("$limit", 10));
+                new Document("$limit", 100));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
