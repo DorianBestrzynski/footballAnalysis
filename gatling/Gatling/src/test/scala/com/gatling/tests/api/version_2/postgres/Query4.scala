@@ -27,7 +27,7 @@ class Query4 extends Simulation {
 
   // Actual test scenario
   val testScenario: ScenarioBuilder = scenario("Test Query 4")
-    .repeat(5) { // Repeat the following block 5 times
+    .repeat(2) { // Repeat the following block 5 times
       exec(
         http("Query 4")
           .get("/api/v2/game/pg/query-4")
@@ -38,7 +38,7 @@ class Query4 extends Simulation {
   // Setup
   setUp(
     // Execute the warm-up scenario without affecting the main test metrics
-    warmUpScenario.inject(atOnceUsers(1)),
+//    warmUpScenario.inject(atOnceUsers(1)),
     // Execute the actual test scenario
     testScenario.inject(atOnceUsers(1))
   ).protocols(httpProtocol)

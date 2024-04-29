@@ -107,7 +107,7 @@ public class VersionOneService {
         return mongoDbReadRepository.query8();
     }
 
-    public List<Query9DTO> query9Mongo() {
+    public String query9Mongo() {
         return mongoDbReadRepository.query9();
     }
 

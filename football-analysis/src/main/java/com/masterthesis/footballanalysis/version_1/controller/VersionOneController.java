@@ -148,7 +148,7 @@ public class VersionOneController {
     }
 
     @GetMapping("/mongo/query-9")
-    public ResponseEntity<List<Query9DTO>> query9Mongo() {
+    public ResponseEntity<String> query9Mongo() {
         var result = service.query9Mongo();
         return ResponseEntity.ok(result);
     }

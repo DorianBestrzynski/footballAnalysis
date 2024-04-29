@@ -27,7 +27,7 @@ class Query3 extends Simulation {
 
   // Actual test scenario
   val testScenario: ScenarioBuilder = scenario("Test Query 3")
-    .repeat(50) { // Repeat the following block 5 times
+    .repeat(100) { // Repeat the following block 5 times
       exec(
         http("Query 3")
           .get("/api/v1_2/game/mongo/query-3")
@@ -40,7 +40,7 @@ class Query3 extends Simulation {
     // Execute the warm-up scenario without affecting the main test metrics
     warmUpScenario.inject(atOnceUsers(1)),
     // Execute the actual test scenario
-    testScenario.inject(atOnceUsers(10))
+    testScenario.inject(atOnceUsers(1))
   ).protocols(httpProtocol)
     .assertions(
       global.responseTime.mean.lt(5000), // Assert the mean response time is less than 50ms
