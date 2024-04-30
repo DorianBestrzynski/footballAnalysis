@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Repository("MongoDbReadRepositoryV1_2")
 @RequiredArgsConstructor
@@ -51,19 +52,21 @@ public class MongoDbReadRepository {
 
     public List<Query2DTO> query2() {
         MongoCollection<Document> collection = database.getCollection(STATISTICS_COLLECTION);
-        FindIterable<Document> result = collection.find(new Document("homeTeam.teamStats.location_home", "\"h\""))
-                .projection(new Document("homeTeam.teamStats.location_home", 1)
-                        .append("homeTeam.teamStats.goals_home", 1)
-                        .append("homeTeam.teamStats.xGoals_home", 1)
-                        .append("homeTeam.teamStats.shots_home", 1)
-                        .append("homeTeam.teamStats.shotsOnTarget_home", 1)
-                        .append("homeTeam.teamStats.deep_home", 1))
+        FindIterable<Document> result = collection.find()
+                .projection(new Document("location", "$homeTeam.teamStats.location_home")
+                        .append("goals", "$homeTeam.teamStats.goals_home")
+                        .append("xGoals", "$homeTeam.teamStats.xGoals_home")
+                        .append("shots", "$homeTeam.teamStats.shots_home")
+                        .append("shotsOnTarget", "$homeTeam.teamStats.shotsOnTarget_home")
+                        .append("deep", "$homeTeam.teamStats.deep_home"))
                 .limit(100);
 
         List<Query2DTO> query2List = new ArrayList<>();
         for (Document doc : result) {
             Query2DTO query2 = new Query2DTO();
-            Double xGoalsNumber = doc.get("xGoals", Number.class).doubleValue(); // Get the value as a Number
+            Double xGoalsNumber = Optional.ofNullable(doc.get("xGoals", Number.class))
+                    .map(Number::doubleValue)
+                    .orElse(0.0); // Get the value as a Number
             query2.setLocation(doc.getString("location"));
             query2.setGoals(doc.getInteger("goals"));
             query2.setShots(doc.getInteger("shots"));

@@ -51,7 +51,7 @@ public class MongoDbReadRepository {
 
     public List<Query2DTO> query2() {
         MongoCollection<Document> collection = database.getCollection("Game_Leagues_Teams_TeamStats");
-        FindIterable<Document> result = collection.find(new Document("homeTeam.teamStats.location_home", "h"))
+        FindIterable<Document> result = collection.find()
                 .projection(new Document("location", "$homeTeam.teamStats.location_home")
                         .append("goals", "$homeTeam.teamStats.goals_home")
                         .append("xGoals", "$homeTeam.teamStats.xGoals_home")
