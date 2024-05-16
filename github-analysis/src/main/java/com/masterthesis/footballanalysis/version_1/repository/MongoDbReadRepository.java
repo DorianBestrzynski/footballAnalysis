@@ -21,30 +21,20 @@ import java.util.List;
 public class MongoDbReadRepository {
     private final MongoDatabase database;
 
-    public List<Query1DTOMongo> query1(int awayGoals) {
-        MongoCollection<Document> collection = database.getCollection("Game_Leagues_Teams_TeamStats");
-        database.runCommand((new Document("planCacheClear", "Game_Leagues_Teams_TeamStats")));
-
-        FindIterable<Document> result = collection.find(new Document("awayGoals", new Document("$gt", awayGoals)))
-                .projection(new Document("gameID", 1L)
-                        .append("leagueName", 1L)
-                        .append("season", 1L)
-                        .append("date", 1L)
-                        .append("homeTeamID", 1L)
-                        .append("awayTeamID", 1L)
-                        .append("homeGoals", 1L)
-                        .append("awayGoals", 1L))
-                .limit(100);
+    public List<Query1DTOMongo> query1() {
+        MongoCollection<Document> collection = database.getCollection("GithubData");
+        FindIterable<Document> result = collection.find(new Document("followers", new Document("$eq", 0)))
+                .projection(new Document("id", 1L)
+                        .append("name", 1L)
+                        .append("login", 1L))
+                .limit(1000000);
 
         List<Query1DTOMongo> query1List = new ArrayList<>();
         for (Document doc : result) {
             Query1DTOMongo query1 = new Query1DTOMongo();
-            query1.setGameId(doc.getInteger("gameID"));
-            query1.setLeagueName(doc.getString("leagueName"));
-            query1.setSeason(doc.getInteger("season"));
-            query1.setDate(doc.getString("date"));
-            query1.setHomeGoals(doc.getInteger("homeGoals"));
-            query1.setAwayGoals(doc.getInteger("awayGoals"));
+            query1.setUserId(doc.getInteger("id"));
+            query1.setName(doc.getString("name"));
+            query1.setLogin(doc.getString("login"));
             query1List.add(query1);
         }
         return query1List;
