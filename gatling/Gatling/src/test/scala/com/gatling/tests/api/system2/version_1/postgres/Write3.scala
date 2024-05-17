@@ -43,7 +43,7 @@ class Write3 extends Simulation {
     """
   }
 
-  val createUserScenario: ScenarioBuilder = scenario("Create Users in MongoDB")
+  val createUserScenario: ScenarioBuilder = scenario("Create Users in Postgres")
     .repeat(1) {
       exec(session => {
         val userBody = generateUserBody()

@@ -63,7 +63,7 @@ class Write2 extends Simulation {
     """
   }
 
-  val createCommitScenario: ScenarioBuilder = scenario("Create Commits")
+  val createCommitScenario: ScenarioBuilder = scenario("Create Commits in Postgres")
     .repeat(1) {
       exec(session => {
         val commitListBody = generateCommitListBody(10) // Generate 10 commit objects

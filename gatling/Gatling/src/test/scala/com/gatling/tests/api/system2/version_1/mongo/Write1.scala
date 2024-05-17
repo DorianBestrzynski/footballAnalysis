@@ -7,125 +7,113 @@ import io.gatling.http.protocol.HttpProtocolBuilder
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 import scala.io.Source
 import scala.util.{Random, Using}
 
 
 class Write1 extends Simulation {
-  def loadIdsFromFile(filePath: String): List[String] = {
-    Using(Source.fromResource(filePath)) { source =>
-      source.getLines().drop(1).toList // Pomijamy pierwszą linię (nagłówek)
-    }.getOrElse {
-      throw new RuntimeException(s"Failed to load data from $filePath")
-    }
-  }
-
-  def randomString(length: Int): String = {
-    val chars = ('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9')
-    Seq.fill(length)(chars(Random.nextInt(chars.length))).mkString
-  }
-
   val httpProtocol: HttpProtocolBuilder = http
     .baseUrl("http://localhost:8080") // Your API endpoint base URL
     .header("Content-Type", "application/json")
 
-  val gameIds: List[String] = loadIdsFromFile("gameIds.csv")
-  val teamIds: List[String] = loadIdsFromFile("teamIds.csv")
-
-  def randomDate(startDate: String, endDate: String): String = {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val start = LocalDate.parse(startDate, formatter)
-    val end = LocalDate.parse(endDate, formatter)
-    val randomDaysToAdd = Random.nextInt(end.toEpochDay.toInt - start.toEpochDay.toInt)
-    start.plusDays(randomDaysToAdd).atTime(15, 0).toString
+  def randomDateTime(startDate: String, endDate: String): String = {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    val start = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+    val end = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+    val randomEpochSecond = start.toEpochSecond(java.time.ZoneOffset.UTC) + Random.nextLong((end.toEpochSecond(java.time.ZoneOffset.UTC) - start.toEpochSecond(java.time.ZoneOffset.UTC)))
+    LocalDateTime.ofEpochSecond(randomEpochSecond, 0, java.time.ZoneOffset.UTC).format(formatter)
   }
 
-  def generateUpdateBody(): String = {
-    val name = randomString(10)
+  def generateFollowerList(numFollowers: Int): String = {
+    (1 to numFollowers).map(_ => Random.nextInt(10000)).mkString("[", ", ", "]")
+  }
 
-    val appearances = (1 to 2).map(_ => generateAppearance()).mkString("[", ",", "]")
-    val shots = (1 to 2).map(_ => generateShots()).mkString("[", ",", "]")
+  def generateFollowingList(numFollowing: Int): String = {
+    (1 to numFollowing).map(_ => Random.nextInt(10000)).mkString("[", ", ", "]")
+  }
 
+  def generateRepoList(numRepos: Int): String = {
+    (1 to numRepos).map { _ =>
+      s"""
+      {
+        "repoId": ${Random.nextInt(10000)},
+        "name": "Repo ${Random.alphanumeric.take(10).mkString}",
+        "description": "Description ${Random.alphanumeric.take(20).mkString}",
+        "language": "Language ${Random.alphanumeric.take(5).mkString}",
+        "hasWiki": ${Random.nextBoolean()},
+        "createdAt": "${randomDateTime("2015-01-01T00:00:00.000Z", "2024-04-02T23:59:59.999Z")}",
+        "updatedAt": "${randomDateTime("2015-01-01T00:00:00.000Z", "2024-04-02T23:59:59.999Z")}",
+        "pushedAt": "${randomDateTime("2015-01-01T00:00:00.000Z", "2024-04-02T23:59:59.999Z")}",
+        "defaultBranch": "main",
+        "stargazersCount": ${Random.nextInt(1000)},
+        "openIssues": ${Random.nextInt(100)},
+        "ownerId": ${Random.nextInt(10000)},
+        "license": "License ${Random.alphanumeric.take(5).mkString}",
+        "size": ${Random.nextInt(100000)},
+        "fork": ${Random.nextBoolean()}
+      }
+      """
+    }.mkString("[", ", ", "]")
+  }
+
+  def generateCommitList(numCommits: Int): String = {
+    (1 to numCommits).map { _ =>
+      s"""
+      {
+        "commitId": ${Random.nextInt(10000)},
+        "message": "Commit message ${Random.alphanumeric.take(10).mkString}",
+        "commitAt": "${randomDateTime("2015-01-01T00:00:00.000Z", "2024-04-02T23:59:59.999Z")}",
+        "generateAt": "${randomDateTime("2015-01-01T00:00:00.000Z", "2024-04-02T23:59:59.999Z")}",
+        "repoId": ${Random.nextInt(10000)},
+        "authorId": ${Random.nextInt(10000)},
+        "committerId": ${Random.nextInt(10000)},
+        "repoName": "Repo ${Random.alphanumeric.take(10).mkString}",
+        "repoDescription": "Description ${Random.alphanumeric.take(20).mkString}"
+      }
+      """
+    }.mkString("[", ", ", "]")
+  }
+
+  def generateFullUserBody(numFollowers: Int, numFollowing: Int, numRepos: Int, numCommits: Int): String = {
     s"""
     {
-      "name": "$name",
-      "appearances": $appearances,
-      "shots": $shots
+      "userId": ${Random.nextInt(10000)},
+      "name": "User ${Random.alphanumeric.take(10).mkString}",
+      "type": "User",
+      "bio": "Bio for user ${Random.alphanumeric.take(20).mkString}",
+      "email": "user${Random.nextInt(10000)}@example.com",
+      "login": "login${Random.alphanumeric.take(10).mkString}",
+      "company": "Company ${Random.alphanumeric.take(10).mkString}",
+      "blog": "https://blog${Random.alphanumeric.take(10).mkString}.com",
+      "location": "Location ${Random.alphanumeric.take(10).mkString}",
+      "createdAt": "${randomDateTime("2015-01-01T00:00:00.000Z", "2024-04-02T23:59:59.999Z")}",
+      "updatedAt": "${randomDateTime("2015-01-01T00:00:00.000Z", "2024-04-02T23:59:59.999Z")}",
+      "hirable": ${Random.nextBoolean()},
+      "isSuspicious": ${Random.nextBoolean()},
+      "followerList": ${generateFollowerList(numFollowers)},
+      "followingList": ${generateFollowingList(numFollowing)},
+      "repoList": ${generateRepoList(numRepos)},
+      "commitList": ${generateCommitList(numCommits)}
     }
-  """
+    """
   }
 
-  def generateAppearance(): String = {
-    val gameID = Random.shuffle(gameIds).head
-    val leagueID = Random.nextInt(5) + 1 // Example randomization, adapt range as needed
-    val time = Random.nextInt(120) + 1 // Assuming a range of 1-120 minutes for a football match
-    val position = Seq("GK", "DF", "MF", "FW")(Random.nextInt(4)) // Random position
-    val positionOrder = Random.nextInt(4) + 1 // Assuming position order ranges from 1 to 4
-
-    // Generate a random body for the update.
-    s"""
-    {
-      "gameID": $gameID,
-      "leagueID": $leagueID,
-      "time": $time,
-      "goals": ${Random.nextInt(5)},
-      "ownGoals": ${Random.nextInt(3)},
-      "xGoals": ${Random.nextFloat()},
-      "assists": ${Random.nextInt(5)},
-      "position": "$position",
-      "positionOrder": $positionOrder,
-      "xAssists": ${Random.nextFloat()},
-      "shots": ${Random.nextInt(10)},
-      "keyPasses": ${Random.nextInt(10)},
-      "yellowCards": ${Random.nextInt(3)},
-      "redCards": ${Random.nextInt(2)},
-      "xGoalsChain": ${Random.nextFloat()},
-      "xGoalsBuildup": ${Random.nextFloat()}
-    }
-  """.trim
-  }
-
-  def generateShots(): String = {
-    val gameID = Random.shuffle(gameIds).head
-    val situation = Seq("FromCorner", "Penulllty", "OpenPlay", "SetPiece", "DirectFreekick")(Random.nextInt(5))
-    val lastAction = Seq("CrossNotClaimed", "BallRecovery", "PenullltyFaced", "Save", "None", "Interception", "Pass", "Smother", "CornerAwarded", "ChanceMissed")(Random.nextInt(10))
-    val shotType = Seq("Head", "LeftFoot", "OtherBodyPart", "RightFoot")(Random.nextInt(4))
-    val shotResult = Seq("OwnGoal", "MissedShots", "ShotOnPost", "Goal", "SavedShot")(Random.nextInt(5))
-
-
-    // Generate a random body for the update.
-    s"""
-    {
-      "gameID": $gameID,
-      "assisterID": ${Random.nextInt(50)},
-      "minute": ${Random.nextInt(90)},
-      "situation": "$situation",
-      "lastAction": "$lastAction",
-      "shotType": "$shotType",
-      "shotResult": "$shotResult",
-      "xGoals": ${Random.nextFloat()},
-      "positionX": ${Random.nextFloat()},
-      "positionY": ${Random.nextFloat()}
-    }
-  """.trim
-  }
-
-  val updateTeamStatScenario: ScenarioBuilder = scenario("Create Player")
-    .repeat(500) {
+  val createFullUserScenario: ScenarioBuilder = scenario("Create Full User in MongoDB")
+    .repeat(1) {
       exec(session => {
-        val updateBody = generateUpdateBody()
-        Files.write(Paths.get("teamStatsJson.txt"), updateBody.getBytes(StandardCharsets.UTF_8))
-        session.set("updateBody", updateBody)
+        val fullUserBody = generateFullUserBody(5, 5, 3, 10) // Generate 5 followers, 5 followings, 3 repositories, and 10 commits
+        session.set("fullUserBody", fullUserBody)
       })
-        .exec(http("Create Player")
-          .post("/api/v1/game/mongo/write-1") // Assuming this is your update endpoint, with teamStatId as a path parameter
-          .body(StringBody("${updateBody}")).asJson
-          .check(status.is(201)) // Assuming 200 is the status code for successful update
+        .exec(http("Create Full User")
+          .post("/api/v1/git/mongo/write-1")
+          .body(StringBody("${fullUserBody}")).asJson
+          .check(status.is(201)) // Assuming 201 is the status code for successful creation
         )
     }
+
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(20)) // Execute the scenario for one user
+    createFullUserScenario.inject(atOnceUsers(10)) // Execute the scenario for 10 users at once
   ).protocols(httpProtocol)
 }
