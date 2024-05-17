@@ -5,59 +5,62 @@ import io.gatling.core.structure.ScenarioBuilder
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 import scala.io.Source
 import scala.util.{Random, Using}
 
 class Write3 extends Simulation {
+
   val httpProtocol: HttpProtocolBuilder = http
     .baseUrl("http://localhost:8080") // Your API endpoint base URL
     .header("Content-Type", "application/json")
 
-  def randomDate(startDate: String, endDate: String): String = {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val start = LocalDate.parse(startDate, formatter)
-    val end = LocalDate.parse(endDate, formatter)
-    val randomDaysToAdd = Random.nextInt(end.toEpochDay.toInt - start.toEpochDay.toInt)
-    start.plusDays(randomDaysToAdd).atTime(15, 0).toString
+  def randomDateTime(startDate: String, endDate: String): String = {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    val start = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+    val end = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+    val randomEpochSecond = start.toEpochSecond(java.time.ZoneOffset.UTC) + Random.nextLong((end.toEpochSecond(java.time.ZoneOffset.UTC) - start.toEpochSecond(java.time.ZoneOffset.UTC)))
+    LocalDateTime.ofEpochSecond(randomEpochSecond, 0, java.time.ZoneOffset.UTC).format(formatter)
   }
 
-  def generateUpdateBody(): String = {
-    val leagueName = Seq("Premier League", "Serie A", "Bundesliga", "La Liga", "Ligue 1")(Random.nextInt(5))
-
+  def generateUserBody(): String = {
     s"""
         {
-          "gameId": ${Random.nextInt(55555)},
-          "date": "${randomDate("2015-01-01", "2024-04-02")}",
-          "leagueName": "$leagueName",
-          "season": 2015,
-          "homeGoals": ${Random.nextInt(16)},
-          "awayGoals": ${Random.nextInt(16)},
-          "homeProbability": ${Random.nextFloat()},
-          "awayProbability": ${Random.nextFloat()},
-          "drawProbability": ${Random.nextFloat()},
-          "homeGoalsHalfTime": ${Random.nextInt(8)},
-          "awayGoalsHalfTime": ${Random.nextInt(8)}
+          "userId": ${Random.nextInt(10000)},
+          "name": "User ${Random.alphanumeric.take(10).mkString}",
+          "type": "User",
+          "bio": "Bio for user ${Random.alphanumeric.take(20).mkString}",
+          "email": "user${Random.nextInt(10000)}@example.com",
+          "login": "login${Random.alphanumeric.take(10).mkString}",
+          "company": "Company ${Random.alphanumeric.take(10).mkString}",
+          "blog": "https://blog${Random.alphanumeric.take(10).mkString}.com",
+          "location": "Location ${Random.alphanumeric.take(10).mkString}",
+          "createdAt": "${randomDateTime("2015-01-01T00:00:00.000Z", "2024-04-02T23:59:59.999Z")}",
+          "updatedAt": "${randomDateTime("2015-01-01T00:00:00.000Z", "2024-04-02T23:59:59.999Z")}",
+          "hirable": ${Random.nextBoolean()},
+          "isSuspicious": ${Random.nextBoolean()}
         }
-        """
+    """
   }
 
-  val updateTeamStatScenario: ScenarioBuilder = scenario("Create Game")
-    .repeat(100) {
+  val createUserScenario: ScenarioBuilder = scenario("Create Users in MongoDB")
+    .repeat(1) {
       exec(session => {
-        val updateBody = generateUpdateBody()
-        session.set("updateBody", updateBody)
+        val userBody = generateUserBody()
+        session.set("userBody", userBody)
       })
-        .exec(http("Create Game")
-          .post("/api/v1/game/mongo/write-3") // Assuming this is your update endpoint, with teamStatId as a path parameter
-          .body(StringBody("${updateBody}")).asJson
-          .check(status.is(201)) // Assuming 200 is the status code for successful update
+        .exec(http("Create User")
+          .post("/api/v1/git/mongo/write-3")
+          .body(StringBody("${userBody}")).asJson
+          .check(status.is(201)) // Assuming 201 is the status code for successful creation
         )
     }
+
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(100)) // Execute the scenario for one user
+    createUserScenario.inject(atOnceUsers(10)) // Execute the scenario for 10 users at once
   ).protocols(httpProtocol)
 }
+
 
 
