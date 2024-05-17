@@ -4,10 +4,6 @@ import lombok.Data;
 
 @Data
 public class Query2DTO {
-    private String location;
-    private int goals;
-    private int shots;
-    private Double xGoals;
-    private int shotsontarget;
-    private int deep;
+    private String commitMessage;
+    private String authorName;
 }

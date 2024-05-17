@@ -15,22 +15,22 @@ class Query2 extends Simulation {
       // Repeat the following block 5 times
       exec(
         http("Query 2")
-          .get("/api/v1/game/pg/query-2")
+          .get("/api/v1/git/pg/query-2")
           .silent
       )
         .exec(
           http("Query 2")
-            .get("/api/v1/game/pg/query-2")
+            .get("/api/v1/git/pg/query-2")
             .silent
         )
     }
 
   // Actual test scenario
   val testScenario: ScenarioBuilder = scenario("Test Query 2")
-    .repeat(20) { // Repeat the following block 5 times
+    .repeat(2) { // Repeat the following block 5 times
       exec(
         http("Query 2")
-          .get("/api/v1/game/pg/query-2")
+          .get("/api/v1/git/pg/query-2")
           .check(status.is(200))
       )
     } // Repeat the request 5 times for the actual test

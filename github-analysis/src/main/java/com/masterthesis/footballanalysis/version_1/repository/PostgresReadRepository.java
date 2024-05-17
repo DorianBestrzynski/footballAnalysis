@@ -28,196 +28,111 @@ public class PostgresReadRepository {
     }
 
     public List<Query2DTO> query2() {
-        String query = "SELECT goals, xGoals, shots, shotsontarget, deep, location " +
-                "FROM team_stats " +
-                "WHERE location = 'h' " +
-                "LIMIT 100 ";
+        String query = "SELECT c.message, g.name AS author_name  " +
+                "FROM Commits c  " +
+                "JOIN git_user g ON c.author_id = g.user_id " +
+                "LIMIT 1000000 ";
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query2DTO query2 = new Query2DTO();
-            query2.setShots(rs.getInt("shots"));
-            query2.setDeep(rs.getInt("deep"));
-            query2.setXGoals(rs.getDouble("xGoals"));
-            query2.setGoals(rs.getInt("goals"));
-            query2.setLocation(rs.getString("location"));
-            query2.setShotsontarget(rs.getInt("shotsontarget"));
+            query2.setAuthorName(rs.getString("author_name"));
+            query2.setCommitMessage(rs.getString("message"));
             return query2;
         });
     }
 
     public List<Query3DTOPostgres> query3() {
-        String query = "SELECT playerId, name, minute, situation, lastaction, shottype, shotresult " +
-                "FROM players p " +
-                "JOIN shots s ON s.shooterId = p.playerId " +
-                "LIMIT 100000 ";
+        String query = "SELECT g.user_id, g.name, r.repo_id, r.name AS repo_name  " +
+                "FROM git_user g   " +
+                "JOIN Repository r ON g.user_id = r.owner_id " +
+                "LIMIT 1000000 ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query3DTOPostgres query3 = new Query3DTOPostgres();
-            query3.setPlayerId(rs.getLong("playerId"));
-            query3.setName(rs.getString("name"));
-            query3.setMinute(rs.getInt("minute"));
-            query3.setSituation(rs.getString("situation"));
-            query3.setLastAction(rs.getString("lastaction"));
-            query3.setShotType(rs.getString("shottype"));
-            query3.setShotResult(rs.getString("shotresult"));
+            query3.setUserId(rs.getInt("user_id"));
+            query3.setUserName(rs.getString("name"));
+            query3.setRepoId(rs.getInt("repo_id"));
+            query3.setRepoName(rs.getString("repo_name"));
             return query3;
         });
     }
 
     public List<Query4DTOPostgres> query4() {
-        String query = "SELECT l.name AS LeagueName,CONCAT(ht.name, ' vs ', at.name) AS Match, g.date, ts.shots AS HomeShots " +
-                "FROM leagues l " +
-                "JOIN games g ON g.leagueId = l.leagueId " +
-                "JOIN teams ht ON g.homeTeamID = ht.teamId " +
-                "JOIN teams at ON g.awayTeamID = at.teamId " +
-                "LEFT JOIN team_stats ts ON ts.gameID = g.gameID AND ts.teamId = ht.teamId " +
-                "ORDER BY ts.shots DESC " +
+        String query = "SELECT u.user_id AS user_id, u.name AS user_name, f.follower_id AS follower_id, fol.following_id AS following_id, r.repo_id AS repo_id, r.name AS repo_name, c.commit_id AS commit_id, c.message AS commit_message " +
+                "FROM git_user u " +
+                "LEFT JOIN followers f ON u.user_id = f.user_id " +
+                "LEFT JOIN Following fol ON u.user_id = fol.user_id " +
+                "LEFT JOIN UserRepositories ur ON u.user_id = ur.user_id " +
+                "LEFT JOIN Repository r ON ur.repo_id = r.repo_id " +
+                "LEFT JOIN Commits c ON r.repo_id = c.repo_id " +
+                "ORDER BY u.user_id, r.repo_id, c.commit_id " +
                 "LIMIT 100 ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query4DTOPostgres query4 = new Query4DTOPostgres();
-            query4.setLeagueName(rs.getString("LeagueName"));
-            query4.setMatch(rs.getString("Match"));
-            query4.setDate(rs.getTimestamp("date"));
-            query4.setHomeShots(rs.getInt("HomeShots"));
+            query4.setUserId(rs.getInt("user_id"));
+            query4.setUserName(rs.getString("user_name"));
+            query4.setFollowerId(rs.getInt("follower_id"));
+            query4.setFollowingId(rs.getInt("following_id"));
+            query4.setRepoId(rs.getInt("repo_id"));
+            query4.setRepoName(rs.getString("repo_name"));
+            query4.setCommitId(rs.getInt("commit_id"));
+            query4.setCommitMessage(rs.getString("commit_message"));
+            return query4;
+        });
+    }
+
+    public List<Query4v2DTO> query4_2() {
+        String query = "SELECT g.user_id, g.name AS user_name, r.repo_id, r.name AS repo_name, c.commit_id, c.message AS commit_message " +
+                "FROM git_user g " +
+                "JOIN Repository r ON g.user_id = r.owner_id " +
+                "JOIN Commits c ON r.repo_id = c.repo_id " +
+                "LIMIT 5000 ";
+
+        return jdbcTemplate.query(query, (rs, rowNum) -> {
+            Query4v2DTO query4 = new Query4v2DTO();
+            query4.setUserId(rs.getInt("user_id"));
+            query4.setUserName(rs.getString("user_name"));
+            query4.setRepoId(rs.getInt("repo_id"));
+            query4.setRepoName(rs.getString("repo_name"));
+            query4.setCommitId(rs.getInt("commit_id"));
+            query4.setCommitMessage(rs.getString("commit_message"));
             return query4;
         });
     }
 
     public List<Query5DTO> query5() {
-        String query = "SELECT g.gameId, g.season, s.shottype, s.shotresult " +
-                "FROM shots s " +
-                "JOIN games g ON s.gameid = g.gameId " +
+        String query = "SELECT location, COUNT(user_id) AS user_count " +
+                "FROM git_user " +
+                "GROUP BY location " +
+                "ORDER BY user_count DESC " +
                 "LIMIT 100 ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query5DTO query5 = new Query5DTO();
-            query5.setGameId(rs.getInt("gameId"));
-            query5.setSeason(rs.getInt("season"));
-            query5.setShotType(rs.getString("shottype"));
-            query5.setShotResult(rs.getString("shotresult"));
+            query5.setLocation(rs.getString("location"));
+            query5.setUserCount(rs.getInt("user_count"));
             return query5;
         });
     }
 
     public List<Query6DTO> query6() {
-        String query = "SELECT p.name AS PlayerName, g.season, l.name AS LeagueName, a.goals " +
-                "FROM appearances a " +
-                "JOIN players p ON a.playerId = p.playerId " +
-                "JOIN games g ON a.gameId = g.gameID " +
-                "JOIN leagues l ON l.leagueId = g.leagueId " +
-                "LIMIT 100000 ";
+        String query = "SELECT u.user_id, u.name, r.repo_id, r.name AS repo_name, DATE_TRUNC('month', c.commit_at) AS commit_month, COUNT(c.commit_id) AS commit_count " +
+                "FROM git_user u " +
+                "JOIN Repository r ON u.user_id = r.owner_id " +
+                "JOIN Commits c ON r.repo_id = c.repo_id " +
+                "GROUP BY u.user_id, u.name, r.repo_id, r.name, commit_month " +
+                "ORDER BY u.user_id, r.repo_id, commit_month " +
+                "LIMIT 10 ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query6DTO query6 = new Query6DTO();
-            query6.setPlayerName(rs.getString("PlayerName"));
-            query6.setSeason(rs.getInt("season"));
-            query6.setLeagueName(rs.getString("LeagueName"));
-            query6.setGoals(rs.getInt("goals"));
+            query6.setUserId(rs.getInt("user_id"));
+            query6.setName(rs.getString("name"));
+            query6.setRepoId(rs.getInt("repo_id"));
+            query6.setRepoName(rs.getString("repo_name"));
+            query6.setCommitDate(rs.getString("commit_month"));
+            query6.setCommitCount(rs.getInt("commit_count"));
             return query6;
-        });
-    }
-
-    public List<Query7DTO> query7() {
-        String query = "SELECT " +
-                "    p.name AS PlayerName, " +
-                "    SUM(a.assists) AS TotalAssists, " +
-                "    COUNT(a.gameID) AS GamesPlayed, " +
-                "    ROUND(SUM(a.assists) * 1.0 / COUNT(a.gameID), 2) AS AvgAssistsPerGame " +
-                "FROM " +
-                "    appearances a " +
-                "JOIN " +
-                "    players p ON a.playerID = p.playerID " +
-                "GROUP BY " +
-                "    p.name " +
-                "HAVING " +
-                "     COUNT(a.gameID) > 5 " + // Considering only players who played more than 5 games
-                "ORDER BY " +
-                "    AvgAssistsPerGame DESC " +
-                "LIMIT 100 ";
-
-        return jdbcTemplate.query(query, (rs, rowNum) -> {
-            Query7DTO query7 = new Query7DTO();
-            query7.setPlayerName(rs.getString("PlayerName"));
-            query7.setTotalAssists(rs.getInt("TotalAssists"));
-            query7.setTotalGames(rs.getLong("GamesPlayed"));
-            query7.setAvgAssistsPerGame(rs.getDouble("AvgAssistsPerGame"));
-            return query7;
-        });
-    }
-
-    public List<Query8DTOPostgres> query8() {
-        String query = "SELECT l.name AS LeagueName, " +
-                "CONCAT(ht.name, ' vs ', at.name) AS Match, " +
-                "g.date, " +
-                "SUM(ts.shots) AS TotalShots, " +
-                "g.gameId " +
-                "FROM games g " +
-                "JOIN teams ht ON g.homeTeamID = ht.teamId " +
-                "JOIN teams at ON g.awayTeamID = at.teamId " +
-                "JOIN leagues l ON g.leagueID = l.leagueID " +
-                "JOIN team_stats ts ON ts.gameID = g.gameID " +
-                "GROUP BY l.name, g.date, ht.name, at.name, g.gameId " +
-                "ORDER BY TotalShots DESC " +
-                "LIMIT 100 ";
-
-        return jdbcTemplate.query(query, (rs, rowNum) -> {
-            Query8DTOPostgres query8 = new Query8DTOPostgres();
-            query8.setLeagueName(rs.getString("LeagueName"));
-            query8.setMatchName(rs.getString("Match"));
-            query8.setDate(rs.getTimestamp("date"));
-            query8.setShots(rs.getLong("TotalShots"));
-            return query8;
-        });
-    }
-
-    public List<Query9DTO> query9() {
-        String query = "SELECT g.season, SUM(s.xgoal) AS xGoalSum " +
-                "FROM shots s " +
-                "JOIN games g ON s.gameid = g.gameId " +
-                "GROUP BY g.season " +
-                "LIMIT 100 ";
-
-        return jdbcTemplate.query(query, (rs, rowNum) -> {
-            Query9DTO query9 = new Query9DTO();
-            query9.setSeason(rs.getInt("season"));
-            query9.setXGoalSum(rs.getDouble("xGoalSum"));
-            return query9;
-        });
-    }
-
-    public List<Query10DTO> query10() {
-        String query = "SELECT p.name, g.season, SUM(a.goals) AS Goals " +
-                "FROM appearances a " +
-                "JOIN players p ON a.playerId = p.playerId " +
-                "JOIN games g ON a.gameId = g.gameID " +
-                "JOIN leagues l ON l.leagueId = g.leagueId " +
-                "GROUP BY p.name, g.season " +
-                "ORDER BY g.season, SUM(a.goals) DESC " +
-                "LIMIT 100 ";
-
-        return jdbcTemplate.query(query, (rs, rowNum) -> {
-            Query10DTO query10 = new Query10DTO();
-            query10.setName(rs.getString("name"));
-            query10.setSeason(rs.getInt("season"));
-            query10.setGoals(rs.getInt("Goals"));
-            return query10;
-        });
-    }
-
-    public List<Query11DTO> query11() {
-        String query = "SELECT p.name, s.situation, s.shotResult " +
-                "FROM players p " +
-                "JOIN shots s ON s.shooterId = p.playerId " +
-                "WHERE s.shotResult = 'Goal' " +
-                "GROUP BY p.name, s.situation, s.shotResult " +
-                "LIMIT 100 ";
-
-        return jdbcTemplate.query(query, (rs, rowNum) -> {
-            Query11DTO query11 = new Query11DTO();
-            query11.setPlayerName(rs.getString("name"));
-            query11.setSituation(rs.getString("situation"));
-            query11.setShotResult(rs.getString("shotResult"));
-            return query11;
         });
     }
 }

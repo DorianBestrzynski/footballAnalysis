@@ -4,8 +4,10 @@ import lombok.Data;
 
 @Data
 public class Query6DTO {
-    private String playerName;
-    private int season;
-    private String leagueName;
-    private int goals;
+    private int userId;
+    private String name;
+    private int repoId;
+    private String repoName;
+    private String commitDate;
+    private int commitCount;
 }

@@ -41,45 +41,34 @@ public class MongoDbReadRepository {
     }
 
     public List<Query2DTO> query2() {
-        MongoCollection<Document> collection = database.getCollection("Game_Leagues_Teams_TeamStats");
-        FindIterable<Document> result = collection.find()
-                .projection(new Document("location", "$homeTeam.teamStats.location_home")
-                        .append("goals", "$homeTeam.teamStats.goals_home")
-                        .append("xGoals", "$homeTeam.teamStats.xGoals_home")
-                        .append("shots", "$homeTeam.teamStats.shots_home")
-                        .append("shotsOnTarget", "$homeTeam.teamStats.shotsOnTarget_home")
-                        .append("deep", "$homeTeam.teamStats.deep_home"))
-                .limit(100);
+        MongoCollection<Document> collection = database.getCollection("GithubData");
+        List<Document> pipeline = Arrays.asList(
+                new Document("$unwind", "$commit_list"),
+                new Document("$project", new Document("message", "$commit_list.message")
+                        .append("name", 1L)),
+                new Document("$limit", 1000000));
+
+        AggregateIterable<Document> result = collection.aggregate(pipeline);
 
         List<Query2DTO> query2List = new ArrayList<>();
         for (Document doc : result) {
             Query2DTO query2 = new Query2DTO();
-            Double xGoalsNumber = doc.get("xGoals", Number.class).doubleValue(); // Get the value as a Number
-            query2.setLocation(doc.getString("location"));
-            query2.setGoals(doc.getInteger("goals"));
-            query2.setShots(doc.getInteger("shots"));
-            query2.setShotsontarget(doc.getInteger("shotsOnTarget"));
-            query2.setXGoals(xGoalsNumber);
-            query2.setDeep(doc.getInteger("deep"));
+            query2.setAuthorName(doc.getString("name"));
+            query2.setCommitMessage(doc.getString("message"));
             query2List.add(query2);
         }
         return query2List;
     }
 
     public List<Query3DTOMongo> query3() {
-        MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
-                        new Document("path", "$shots")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$project",
-                        new Document("playerID", 1L)
-                                .append("name", 1L)
-                                .append("minute", "$shots.minute")
-                                .append("situation", "$shots.situation")
-                                .append("lastAction", "$shots.lastAction")
-                                .append("shotType", "$shots.shotType")
-                                .append("shotResult", "$shots.shotResult")),
-                new Document("$limit", 100000));
+        MongoCollection<Document> collection = database.getCollection("GithubData");
+        List<Document> pipeline = Arrays.asList(
+                new Document("$unwind", "$repo_list"),
+                new Document("$project", new Document("id", 1L)
+                        .append("name", 1L)
+                        .append("repo_id", "$repo_list.id")
+                        .append("repo_name", "$repo_list.full_name")),
+                new Document("$limit", 1000000));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -87,337 +76,121 @@ public class MongoDbReadRepository {
         List<Query3DTOMongo> query3DTOMongoList = new ArrayList<>();
         for (Document doc : result) {
             Query3DTOMongo query3 = new Query3DTOMongo();
-            query3.setPlayerId(doc.getInteger("playerID"));
-            query3.setName(doc.getString("name"));
-            query3.setMinute(doc.getInteger("minute"));
-            query3.setSituation(doc.getString("situation"));
-            query3.setLastAction(doc.getString("lastAction"));
-            query3.setShotType(doc.getString("shotType"));
-            query3.setShotResult(doc.getString("shotResult"));
+            query3.setUserId(doc.getInteger("id"));
+            query3.setUserName(doc.getString("name"));
+            query3.setRepoId(doc.getInteger("repo_id"));
+            query3.setRepoName(doc.getString("repo_name"));
             query3DTOMongoList.add(query3);
         }
         return query3DTOMongoList;
     }
 
-    public List<Query4DTOMongo> query4() {
-        MongoCollection<Document> collection = database.getCollection("Game_Leagues_Teams_TeamStats");
+    public List<Document> query4() {
+        MongoCollection<Document> collection = database.getCollection("GithubData");
 
-        List<Document> pipeline = Arrays.asList(new Document("$project",
-                        new Document("LeagueName", "$leagueName")
-                                .append("Match",
-                                        new Document("$concat", Arrays.asList("$homeTeam.name", " vs ", "$awayTeam.name")))
-                                .append("Date", "$date")
-                                .append("Shots", "$homeTeam.teamStats.shots_home")),
-                new Document("$sort",
-                        new Document("Shots", -1L)),
+        List<Document> pipeline = Arrays.asList(
+                new Document("$project", new Document("user_id", 1L)
+                        .append("name", 1L)
+                        .append("follower_list", 1L)
+                        .append("following_list", 1L)
+                        .append("repo_list", 1L)
+                        .append("commit_list", 1L)),
                 new Document("$limit", 100));
 
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
 
-        List<Query4DTOMongo> query4DTOMongos = new ArrayList<>();
+        List<Document> resultList = new ArrayList<>();
         for (Document doc : result) {
-            Query4DTOMongo query4 = new Query4DTOMongo();
-            query4.setLeagueName(doc.getString("LeagueName"));
-            query4.setMatch(doc.getString("Match"));
-            query4.setDate(doc.getString("Date"));
-            query4.setHomeShots(doc.getInteger("Shots"));
-            query4DTOMongos.add(query4);
+            resultList.add(doc);
         }
-        return query4DTOMongos;
+        return resultList;
+    }
+
+    public List<Query4v2DTO> query4v2() {
+        MongoCollection<Document> collection = database.getCollection("GithubData");
+
+        List<Document> pipeline = Arrays.asList(
+                new Document("$unwind", "$repo_list"),
+                new Document("$lookup", new Document("from", "GithubData")
+                        .append("localField", "repo_list.id")
+                        .append("foreignField", "commit_list.repo_id")
+                        .append("as", "commits")),
+                new Document("$project", new Document("id", 1L)
+                        .append("name", 1L)
+                        .append("repo_id", "$repo_list.id")
+                        .append("repo_name", "$repo_list.full_name")
+                        .append("commit_id", "$commits.commit_list.commit_id")
+                        .append("commit_message", "$commits.commit_list.message")),
+                new Document("$limit", 5000));
+
+
+        // Execute the aggregation pipeline
+        AggregateIterable<Document> result = collection.aggregate(pipeline);
+        ;
+        List<Query4v2DTO> query3DTOMongoList = new ArrayList<>();
+
+        for (Document doc : result) {
+            Query4v2DTO query4 = new Query4v2DTO();
+            query4.setUserId(doc.getInteger("id"));
+            query4.setUserName(doc.getString("name"));
+            query4.setRepoId(doc.getInteger("repo_id"));
+            query4.setRepoName(doc.getString("repo_name"));
+            query3DTOMongoList.add(query4);
+        }
+        return query3DTOMongoList;
     }
 
     public List<Query5DTO> query5() {
-        MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
+        MongoCollection<Document> collection = database.getCollection("GithubData");
 
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
-                        new Document("path", "$shots")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$lookup",
-                        new Document("from", "Game_Leagues_Teams_TeamStats")
-                                .append("localField", "shots.gameID")
-                                .append("foreignField", "gameID")
-                                .append("as", "GameShots")),
-                new Document("$unwind",
-                        new Document("path", "$GameShots")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$project",
-                        new Document("gameId", "$GameShots.gameID")
-                                .append("season", "$GameShots.season")
-                                .append("shotType", "$shots.shotType")
-                                .append("shotResult", "$shots.shotResult")),
-                new Document("$limit", 10));
+        List<Document> pipeline = Arrays.asList(
+                new Document("$group", new Document("_id", "$location")
+                        .append("user_count", new Document("$sum", 1))),
+                new Document("$sort", new Document("user_count", -1)), // Sort by user_count descending
+                new Document("$limit", 100));
+
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
+        ;
+        List<Query5DTO> query3DTOMongoList = new ArrayList<>();
 
-        List<Query5DTO> query5DTOs = new ArrayList<>();
         for (Document doc : result) {
             Query5DTO query5 = new Query5DTO();
-            query5.setGameId(doc.getInteger("gameId"));
-            query5.setSeason(doc.getInteger("season"));
-            query5.setShotType(doc.getString("shotType"));
-            query5.setShotResult(doc.getString("shotResult"));
-            query5DTOs.add(query5);
+            query5.setLocation(doc.getString("_id"));
+            query5.setUserCount(doc.getInteger("user_count"));
+            query3DTOMongoList.add(query5);
         }
-        return query5DTOs;
+        return query3DTOMongoList;
     }
 
-    public List<Query6DTO> query6() {
-        MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
+    public List<Document> query6() {
+        MongoCollection<Document> collection = database.getCollection("GithubData");
 
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
-                        new Document("path", "$appearances")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$lookup",
-                        new Document("from", "Game_Leagues_Teams_TeamStats")
-                                .append("localField", "appearances.gameID")
-                                .append("foreignField", "gameID")
-                                .append("as", "GameAppearances")),
-                new Document("$unwind",
-                        new Document("path", "$GameAppearances")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$project",
-                        new Document("name", "$name")
-                                .append("season", "$GameAppearances.season")
-                                .append("leagueName", "$GameAppearances.leagueName")
-                                .append("goals", "$appearances.goals")),
-                new Document("$limit", 100000));
-
-        // Execute the aggregation pipeline
-        AggregateIterable<Document> result = collection.aggregate(pipeline);
-
-        List<Query6DTO> query6DTOS = new ArrayList<>();
-        for (Document doc : result) {
-            Query6DTO query6 = new Query6DTO();
-            query6.setPlayerName(doc.getString("name"));
-            query6.setSeason(doc.getInteger("season"));
-            query6.setLeagueName(doc.getString("leagueName"));
-            query6.setGoals(doc.getInteger("goals"));
-            query6DTOS.add(query6);
-        }
-        return query6DTOS;
-    }
-
-    public List<Query7DTO> query7() {
-        // Get the collection you want to query
-        MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
-
-        // Define your aggregation pipeline
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
-                        new Document("path", "$appearances")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$group",
-                        new Document("_id", "$name")
-                                .append("TotalAssists",
-                                        new Document("$sum", "$appearances.assists"))
-                                .append("GamePlayed",
-                                        new Document("$sum", 1L))),
-                new Document("$project",
-                        new Document("_id", 0L)
-                                .append("PlayerName", "$_id")
-                                .append("TotalAssists", 1L)
-                                .append("GamePlayed", 1L)
-                                .append("AvgAssistsPerGame",
-                                        new Document("$round", Arrays.asList(new Document("$divide", Arrays.asList("$TotalAssists", "$GamePlayed")), 2L)))),
-                new Document("$match",
-                        new Document("GamePlayed",
-                                new Document("$gt", 5L))),
-                new Document("$sort",
-                        new Document("AvgAssistsPerGame", -1L)),
-                new Document("$limit", 1000));
-
-        // Execute the aggregation pipeline
-        AggregateIterable<Document> result = collection.aggregate(pipeline);
-        List<Query7DTO> query7DTOS = new ArrayList<>();
-        for (Document doc : result) {
-            Query7DTO query7 = new Query7DTO();
-            // Manual mapping from Document to GameStats
-            query7.setPlayerName(doc.getString("PlayerName"));
-            query7.setTotalAssists(doc.getInteger("TotalAssists"));
-            query7.setTotalGames(doc.getLong("GamePlayed"));
-            query7.setAvgAssistsPerGame(doc.getDouble("AvgAssistsPerGame"));
-            query7DTOS.add(query7);
-        }
-
-        return query7DTOS;
-    }
-
-    public List<Query8DTOMongo> query8() {
-        // Get the collection you want to query
-        MongoCollection<Document> collection = database.getCollection("Game_Leagues_Teams_TeamStats");
-
-        // Define your aggregation pipeline
-        List<Document> pipeline = Arrays.asList(new Document("$project",
-                        new Document("LeagueName", "$leagueName")
-                                .append("Match",
-                                        new Document("$concat", Arrays.asList("$homeTeam.name", " vs ", "$awayTeam.name")))
-                                .append("TotalShots",
-                                        new Document("$sum", Arrays.asList("$homeTeam.teamStats.shots_home", "$awayTeam.teamStats.shots_away")))
-                                .append("GameID", "$gameID")
-                                .append("Date", "$date")),
-                new Document("$group",
-                        new Document("_id",
-                                new Document("LeagueName", "$LeagueName")
-                                        .append("Match", "$Match")
-                                        .append("Date", "$Date")
-                                        .append("GameID", "$GameID"))
-                                .append("TotalShots",
-                                        new Document("$first", "$TotalShots"))),
-                new Document("$project",
-                        new Document("_id", 0L)
-                                .append("LeagueName", "$_id.LeagueName")
-                                .append("Match", "$_id.Match")
-                                .append("Date", "$_id.Date")
-                                .append("TotalShots", 1L)
-                                .append("GameID", "$_id.GameID")),
-                new Document("$sort",
-                        new Document("TotalShots", -1L)),
-                new Document("$limit", 100));
-
-        // Execute the aggregation pipeline
-        AggregateIterable<Document> result = collection.aggregate(pipeline);
-
-        List<Query8DTOMongo> query8DTOMongos = new ArrayList<>();
-        for (Document doc : result) {
-            Query8DTOMongo gameStats = new Query8DTOMongo();
-            // Manual mapping from Document to GameStats
-            gameStats.setLeagueName(doc.getString("LeagueName"));
-            gameStats.setMatchName(doc.getString("Match"));
-            gameStats.setDate(doc.getString("Date"));
-            gameStats.setShots(doc.getInteger("TotalShots"));
-
-            query8DTOMongos.add(gameStats);
-        }
-        return query8DTOMongos;
-    }
-
-    public String query9() {
-        // Get the collection you want to query
-        MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
-
-        // Define your aggregation pipeline
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
-                        new Document("path", "$shots")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$lookup",
-                        new Document("from", "Game_Leagues_Teams_TeamStats")
-                                .append("localField", "shots.gameID")
-                                .append("foreignField", "gameID")
-                                .append("as", "GameShots")),
-                new Document("$unwind",
-                        new Document("path", "$GameShots")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$group",
-                        new Document("_id",
-                                new Document("season", "$GameShots.season"))
-                                .append("TotalXGoal",
-                                        new Document("$sum", "$shots.xGoal"))),
-                new Document("$project",
-                        new Document("_id", 0L)
-                                .append("Season", "$_id.season")
-                                .append("TotalXGoal", 1L)),
-                new Document("$sort",
-                        new Document("TotalXGoal", -1L)),
+        List<Document> pipeline = Arrays.asList(
+                new Document("$unwind", "$repo_list"),
+                new Document("$unwind", "$commit_list"),
+                new Document("$match", new Document("$expr", new Document("$eq", Arrays.asList("$commit_list.repo_id", "$repo_list.id")))),
+                new Document("$addFields", new Document("commit_list.commit_at_date", new Document("$dateFromString", new Document("dateString", "$commit_list.commit_at")))),
+                new Document("$group", new Document("_id", new Document("user_id", "$user_id")
+                        .append("user_name", "$name")
+                        .append("repo_id", "$repo_list.id")
+                        .append("repo_name", "$repo_list.full_name")
+                        .append("commit_month", new Document("$dateToString", new Document("format", "%Y-%m").append("date", "$commit_list.commit_at_date"))))
+                        .append("commit_count", new Document("$sum", 1))),
+                new Document("$sort", new Document("_id.user_id", 1)
+                        .append("_id.repo_id", 1)
+                        .append("_id.commit_month", 1)),
                 new Document("$limit", 10));
 
-        // Execute the aggregation pipeline
-        var result = collection.aggregate(pipeline);
-        log.info("Explained: {} ", result.explain());
 
-        return result.first().toString();
-//        return result;
-//        List<Query9DTO> query9DTOS = new ArrayList<>();
-//        for (Document doc : result) {
-//            Query9DTO query9 = new Query9DTO();
-//            double xGoalsNumber = doc.get("TotalXGoal", Number.class).doubleValue(); // Get the value as a Number
-//            query9.setSeason(doc.getInteger("Season"));
-//            query9.setXGoalSum(xGoalsNumber);
-//            query9DTOS.add(query9);
-//        }
-//        return query9DTOS;
-    }
-
-    public List<Query10DTO> query10() {
-        // Get the collection you want to query
-        MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
-
-        // Define your aggregation pipeline
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
-                        new Document("path", "$appearances")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$lookup",
-                        new Document("from", "Game_Leagues_Teams_TeamStats")
-                                .append("localField", "appearances.gameID")
-                                .append("foreignField", "gameID")
-                                .append("as", "GameAppearances")),
-                new Document("$unwind",
-                        new Document("path", "$GameAppearances")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$group",
-                        new Document("_id",
-                                new Document("name", "$name")
-                                        .append("season", "$GameAppearances.season"))
-                                .append("TotalGoals",
-                                        new Document("$sum", "$appearances.goals"))),
-                new Document("$project",
-                        new Document("_id", 0L)
-                                .append("PlayerName", "$_id.name")
-                                .append("Season", "$_id.season")
-                                .append("TotalGoals", 1L)),
-                new Document("$sort",
-                        new Document("Season", 1L)
-                                .append("TotalGoals", -1L)));
-
-        // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
-        log.info("Explained: {} ", result.explain());
-
-        List<Query10DTO> query10DTOS = new ArrayList<>();
+        List<Document> resultList = new ArrayList<>();
         for (Document doc : result) {
-            Query10DTO query10 = new Query10DTO();
-            query10.setName(doc.getString("PlayerName"));
-            query10.setSeason(doc.getInteger("Season"));
-            query10.setGoals(doc.getInteger("TotalGoals"));
-            query10DTOS.add(query10);
+            resultList.add(doc);
         }
-        return query10DTOS;
-    }
-
-    public List<Query11DTO> query11() {
-        // Get the collection you want to query
-        MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
-
-        // Define your aggregation pipeline
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
-                        new Document("path", "$shots")
-                                .append("preserveNullAndEmptyArrays", false)),
-                new Document("$match",
-                        new Document("shots.shotResult", "Goal")),
-                new Document("$group",
-                        new Document("_id",
-                                new Document("name", "$name")
-                                        .append("situation", "$shots.situation")
-                                        .append("shotResult", "$shots.shotResult"))),
-                new Document("$project",
-                        new Document("_id", 0L)
-                                .append("name", "$_id.name")
-                                .append("situation", "$_id.situation")
-                                .append("shotResult", "$_id.shotResult")),
-                new Document("$limit", 100));
-
-        // Execute the aggregation pipeline
-        AggregateIterable<Document> result = collection.aggregate(pipeline);
-
-        List<Query11DTO> query11DTOS = new ArrayList<>();
-        for (Document doc : result) {
-            Query11DTO query11 = new Query11DTO();
-            query11.setPlayerName(doc.getString("name"));
-            query11.setSituation(doc.getString("situation"));
-            query11.setShotResult(doc.getString("shotResult"));
-            query11DTOS.add(query11);
-        }
-        return query11DTOS;
+        return resultList;
     }
 }

@@ -6,6 +6,7 @@ import com.masterthesis.footballanalysis.version_1.repository.MongoDbWriteReposi
 import com.masterthesis.footballanalysis.version_1.repository.PostgresReadRepository;
 import com.masterthesis.footballanalysis.version_1.repository.PostgresWriteRepository;
 import lombok.RequiredArgsConstructor;
+import org.bson.Document;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,6 +36,10 @@ public class VersionOneService {
         return postgresReadRepository.query4();
     }
 
+    public List<Query4v2DTO> query4v2Postgres() {
+        return postgresReadRepository.query4_2();
+    }
+
     public List<Query5DTO> query5Postgres() {
         return postgresReadRepository.query5();
     }
@@ -43,36 +48,24 @@ public class VersionOneService {
         return postgresReadRepository.query6();
     }
 
-    public List<Query7DTO> query7Postgres() {
-        return postgresReadRepository.query7();
+    public void write1Postgres(FullUserDTO fullUserDTO) {
+        postgresWriteRepository.createFullUser(fullUserDTO);
     }
 
-    public List<Query8DTOPostgres> query8Postgres() {
-        return postgresReadRepository.query8();
+    public void write2Postgres(List<WriteCommitDTO> writeCommitDTOS) {
+        if (writeCommitDTOS.isEmpty()) {
+            return;
+        }
+        if (writeCommitDTOS.size() == 1) {
+            postgresWriteRepository.createCommit(writeCommitDTOS.get(0));
+        }
+        else {
+            postgresWriteRepository.createCommits(writeCommitDTOS);
+        }
     }
 
-    public List<Query9DTO> query9Postgres() {
-        return postgresReadRepository.query9();
-    }
-
-    public List<Query10DTO> query10Postgres() {
-        return postgresReadRepository.query10();
-    }
-
-    public List<Query11DTO> query11Postgres() {
-        return postgresReadRepository.query11();
-    }
-
-    public void write1Postgres(Player player) {
-        postgresWriteRepository.createPlayerAndAppearancesAndShots(player);
-    }
-
-    public void write2Postgres(TeamStat teamStat) {
-        postgresWriteRepository.createTeamStat(teamStat);
-    }
-
-    public void write3Postgres(Game game) {
-        postgresWriteRepository.createGame(game);
+    public void write3Postgres(GitUser gitUser) {
+        postgresWriteRepository.createGitUser(gitUser);
     }
 
     public List<Query1DTOMongo> query1Mongo() {
@@ -87,47 +80,40 @@ public class VersionOneService {
         return mongoDbReadRepository.query3();
     }
 
-    public List<Query4DTOMongo> query4Mongo() {
+    public List<Document> query4Mongo() {
         return mongoDbReadRepository.query4();
+    }
+
+    public List<Query4v2DTO> query4v2Mongo() {
+        return mongoDbReadRepository.query4v2();
     }
 
     public List<Query5DTO> query5Mongo() {
         return mongoDbReadRepository.query5();
     }
 
-    public List<Query6DTO> query6Mongo() {
+    public List<Document> query6Mongo() {
         return mongoDbReadRepository.query6();
     }
 
-    public List<Query7DTO> query7Mongo() {
-        return mongoDbReadRepository.query7();
+    public void write1Mongo(FullUserDTO fullUserDTO) {
+        mongoDbWriteRepository.createFullUser(fullUserDTO);
     }
 
-    public List<Query8DTOMongo> query8Mongo() {
-        return mongoDbReadRepository.query8();
+    public void write2Mongo(List<WriteCommitDTO> writeCommitDTOS) {
+        if (writeCommitDTOS.isEmpty()) {
+            return;
+        }
+        var userId = writeCommitDTOS.getFirst().getAuthorId();
+        if (writeCommitDTOS.size() == 1) {
+            mongoDbWriteRepository.addCommitToUser(userId, writeCommitDTOS.get(0));
+        }
+        else {
+            mongoDbWriteRepository.addCommitsToUser(userId, writeCommitDTOS);
+        }
     }
 
-    public String query9Mongo() {
-        return mongoDbReadRepository.query9();
-    }
-
-    public List<Query10DTO> query10Mongo() {
-        return mongoDbReadRepository.query10();
-    }
-
-    public List<Query11DTO> query11Mongo() {
-        return mongoDbReadRepository.query11();
-    }
-
-    public void write1Mongo(Player player) {
-        mongoDbWriteRepository.updatePlayer(player);
-    }
-
-    public void write2Mongo(TeamStatMongo teamStatMongo) {
-        mongoDbWriteRepository.updateTeamStats(teamStatMongo);
-    }
-
-    public void write3Mongo(Game game) {
-        mongoDbWriteRepository.updateGame(game);
+    public void write3Mongo(GitUser gitUser) {
+        mongoDbWriteRepository.createGitUser(gitUser);
     }
 }

@@ -6,8 +6,12 @@ import java.sql.Timestamp;
 
 @Data
 public class Query4DTOPostgres {
-    private String leagueName;
-    private String match;
-    private Timestamp date;
-    private int homeShots;
+    private int userId;
+    private String userName;
+    private int followerId;
+    private int followingId;
+    private int repoId;
+    private String repoName;
+    private int commitId;
+    private String commitMessage;
 }

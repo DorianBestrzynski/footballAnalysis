@@ -5,9 +5,7 @@ import io.gatling.core.structure.ScenarioBuilder
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
-import scala.util.Random
-
-class Query2 extends Simulation {
+class Query4v2 extends Simulation {
   val httpProtocol: HttpProtocolBuilder = http
     .baseUrl("http://localhost:8080")
 
@@ -16,23 +14,23 @@ class Query2 extends Simulation {
     .group("WARM UP") {
       // Repeat the following block 5 times
       exec(
-        http("Query 2")
-          .get("/api/v1/git/mongo/query-2")
+        http("Query 4")
+          .get("/api/v1/git/mongo/query-4-2")
           .silent
       )
         .exec(
-          http("Query 2")
-            .get("/api/v1/git/mongo/query-2")
+          http("Query 4")
+            .get("/api/v1/git/mongo/query-4-2")
             .silent
         )
     }
 
   // Actual test scenario
-  val testScenario: ScenarioBuilder = scenario("Test Query 2")
+  val testScenario: ScenarioBuilder = scenario("Test Query 4")
     .repeat(10) { // Repeat the following block 5 times
       exec(
-        http("Query 2")
-          .get("/api/v1/git/mongo/query-2")
+        http("Query 4")
+          .get("/api/v1/git/mongo/query-4-2")
           .check(status.is(200))
       )
     } // Repeat the request 5 times for the actual test

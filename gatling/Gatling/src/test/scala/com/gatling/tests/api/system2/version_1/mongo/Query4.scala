@@ -15,12 +15,12 @@ class Query4 extends Simulation {
       // Repeat the following block 5 times
       exec(
         http("Query 4")
-          .get("/api/v1/game/mongo/query-4")
+          .get("/api/v1/git/mongo/query-4")
           .silent
       )
         .exec(
           http("Query 4")
-            .get("/api/v1/game/mongo/query-4")
+            .get("/api/v1/git/mongo/query-4")
             .silent
         )
     }
@@ -30,7 +30,7 @@ class Query4 extends Simulation {
     .repeat(20) { // Repeat the following block 5 times
       exec(
         http("Query 4")
-          .get("/api/v1/game/mongo/query-4")
+          .get("/api/v1/git/mongo/query-4")
           .check(status.is(200))
       )
     } // Repeat the request 5 times for the actual test

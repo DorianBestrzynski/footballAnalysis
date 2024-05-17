@@ -3,6 +3,7 @@ package com.masterthesis.footballanalysis.version_1.controller;
 import com.masterthesis.footballanalysis.version_1.dto.*;
 import com.masterthesis.footballanalysis.version_1.service.VersionOneService;
 import lombok.RequiredArgsConstructor;
+import org.bson.Document;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,12 @@ public class VersionOneController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/pg/query-4-2")
+    public ResponseEntity<List<Query4v2DTO>> query4v2Pg() {
+        var result = service.query4v2Postgres();
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping("/pg/query-5")
     public ResponseEntity<List<Query5DTO>> query5Pg() {
         var result = service.query5Postgres();
@@ -53,20 +60,20 @@ public class VersionOneController {
 
     @PostMapping("/pg/write-1")
     @ResponseStatus(HttpStatus.CREATED)
-    public void write1Pg(@RequestBody Player player) {
-        service.write1Postgres(player);
+    public void write1Pg(@RequestBody FullUserDTO fullUserDTO) {
+        service.write1Postgres(fullUserDTO);
     }
 
     @PostMapping("/pg/write-2")
     @ResponseStatus(HttpStatus.CREATED)
-    public void write2Pg(@RequestBody TeamStat teamStat) {
-        service.write2Postgres(teamStat);
+    public void write2Pg(@RequestBody List<WriteCommitDTO> writeCommitDTOS) {
+        service.write2Postgres(writeCommitDTOS);
     }
 
     @PostMapping("/pg/write-3")
     @ResponseStatus(HttpStatus.CREATED)
-    public void write3Pg(@RequestBody Game game) {
-        service.write3Postgres(game);
+    public void write3Pg(@RequestBody GitUser gitUser) {
+        service.write3Postgres(gitUser);
     }
 
     @GetMapping("/mongo/query-1")
@@ -88,8 +95,14 @@ public class VersionOneController {
     }
 
     @GetMapping("/mongo/query-4")
-    public ResponseEntity<List<Query4DTOMongo>> query4Mongo() {
+    public ResponseEntity<List<Document>> query4Mongo() {
         var result = service.query4Mongo();
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/mongo/query-4-2")
+    public ResponseEntity<List<Query4v2DTO>> query4v2Mongo() {
+        var result = service.query4v2Mongo();
         return ResponseEntity.ok(result);
     }
 
@@ -100,26 +113,26 @@ public class VersionOneController {
     }
 
     @GetMapping("/mongo/query-6")
-    public ResponseEntity<List<Query6DTO>> query6Mongo() {
+    public ResponseEntity<List<Document>> query6Mongo() {
         var result = service.query6Mongo();
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/mongo/write-1")
     @ResponseStatus(HttpStatus.CREATED)
-    public void write1Mongo(@RequestBody Player player) {
-        service.write1Mongo(player);
+    public void write1Mongo(@RequestBody FullUserDTO fullUserDTO) {
+        service.write1Mongo(fullUserDTO);
     }
 
     @PostMapping("/mongo/write-2")
     @ResponseStatus(HttpStatus.CREATED)
-    public void write2Mongo(@RequestBody TeamStatMongo teamStatMongo) {
-        service.write2Mongo(teamStatMongo);
+    public void write2Mongo(@RequestBody List<WriteCommitDTO> writeCommitDTO) {
+        service.write2Mongo(writeCommitDTO);
     }
 
     @PostMapping("/mongo/write-3")
     @ResponseStatus(HttpStatus.CREATED)
-    public void write3Mongo(@RequestBody Game game) {
-        service.write3Mongo(game);
+    public void write3Mongo(@RequestBody GitUser gitUser) {
+        service.write3Mongo(gitUser);
     }
 }

@@ -8,8 +8,13 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository("PostgresWriteRepositoryV1")
 @RequiredArgsConstructor
@@ -17,113 +22,143 @@ public class PostgresWriteRepository {
     private final JdbcTemplate jdbcTemplate;
 
     @Transactional
-    public void createPlayerAndAppearancesAndShots(Player player) {
-        int playerId = createPlayer(player);
-        for (PlayerAppearance appearance : player.getAppearances()) {
-            createAppearance(appearance, playerId);
+    public void createFullUser(FullUserDTO user) {
+        // Insert into git_user table
+        String userSql = "INSERT INTO git_user (name, type, bio, email, login, company, blog, location, created_at, updated_at, hirable, is_suspicious) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        KeyHolder userKeyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(userSql, new String[] {"user_id"});
+            ps.setString(1, user.getName());
+            ps.setString(2, user.getType());
+            ps.setString(3, user.getBio());
+            ps.setString(4, user.getEmail());
+            ps.setString(5, user.getLogin());
+            ps.setString(6, user.getCompany());
+            ps.setString(7, user.getBlog());
+            ps.setString(8, user.getLocation());
+            ps.setTimestamp(9, new Timestamp(user.getCreatedAt().getTime()));
+            ps.setTimestamp(10, new Timestamp(user.getUpdatedAt().getTime()));
+            ps.setBoolean(11, user.getHirable());
+            ps.setBoolean(12, user.getIsSuspicious());
+            return ps;
+        }, userKeyHolder);
+
+        // Retrieve the generated user ID
+        int userId = userKeyHolder.getKey().intValue();
+
+        // Insert into Followers table
+        String followerSql = "INSERT INTO Followers (user_id, follower_id) VALUES (?, ?)";
+        List<Object[]> followerBatchArgs = user.getFollowerList().stream()
+                .map(followerId -> new Object[]{userId, followerId})
+                .collect(Collectors.toList());
+        jdbcTemplate.batchUpdate(followerSql, followerBatchArgs);
+
+        // Insert into Following table
+        String followingSql = "INSERT INTO Following (user_id, following_id) VALUES (?, ?)";
+        List<Object[]> followingBatchArgs = user.getFollowingList().stream()
+                .map(followingId -> new Object[]{userId, followingId})
+                .collect(Collectors.toList());
+        jdbcTemplate.batchUpdate(followingSql, followingBatchArgs);
+
+        // Insert into Repository table
+        String repoSql = "INSERT INTO Repository (name, description, language, has_wiki, created_at, updated_at, pushed_at, default_branch, stargazers_count, open_issues, owner_id, license, size, fork) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        List<Integer> repoIds = new ArrayList<>();
+        for (FullUserDTO.RepositoryDTO repo : user.getRepoList()) {
+            KeyHolder repoKeyHolder = new GeneratedKeyHolder();
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps = connection.prepareStatement(repoSql, new String[] {"repo_id"});
+                ps.setString(1, repo.getName());
+                ps.setString(2, repo.getDescription());
+                ps.setString(3, repo.getLanguage());
+                ps.setBoolean(4, repo.getHasWiki());
+                ps.setTimestamp(5, new Timestamp(repo.getCreatedAt().getTime()));
+                ps.setTimestamp(6, new Timestamp(repo.getUpdatedAt().getTime()));
+                ps.setTimestamp(7, new Timestamp(repo.getPushedAt().getTime()));
+                ps.setString(8, repo.getDefaultBranch());
+                ps.setInt(9, repo.getStargazersCount());
+                ps.setInt(10, repo.getOpenIssues());
+                ps.setInt(11, userId); // owner_id is the generated user ID
+                ps.setString(12, repo.getLicense());
+                ps.setInt(13, repo.getSize());
+                ps.setBoolean(14, repo.getFork());
+                return ps;
+            }, repoKeyHolder);
+
+            // Retrieve the generated repository ID
+            int repoId = repoKeyHolder.getKey().intValue();
+            repoIds.add(repoId);
+
+            // Insert into Commits table
+            String commitSql = "INSERT INTO Commits (message, commit_at, generate_at, repo_id, author_id, committer_id, repo_name, repo_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            List<Object[]> commitBatchArgs = user.getCommitList().stream()
+                    .filter(commit -> commit.getRepoId().equals(repo.getRepoId()))
+                    .map(commit -> new Object[]{
+                            commit.getMessage(), new Timestamp(commit.getCommitAt().getTime()), new Timestamp(commit.getGenerateAt().getTime()),
+                            repoId, userId, commit.getCommitterId(), commit.getRepoName(), commit.getRepoDescription()
+                    })
+                    .collect(Collectors.toList());
+            jdbcTemplate.batchUpdate(commitSql, commitBatchArgs);
         }
-        for (PlayerShots shot : player.getShots()) {
-            createShot(shot, playerId);
+
+        // Insert into UserRepositories table
+        String userRepoSql = "INSERT INTO UserRepositories (user_id, repo_id) VALUES (?, ?)";
+        List<Object[]> userRepoBatchArgs = repoIds.stream()
+                .map(repoId -> new Object[]{userId, repoId})
+                .collect(Collectors.toList());
+        jdbcTemplate.batchUpdate(userRepoSql, userRepoBatchArgs);
+    }
+
+    public void createCommit(WriteCommitDTO commit) {
+        String sql = "INSERT INTO Commits (message, commit_at, generate_at, repo_id, author_id, committer_id, repo_name, repo_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        jdbcTemplate.update(sql,
+                commit.getMessage(),
+                commit.getCommitAt(),
+                commit.getGenerateAt(),
+                commit.getRepoId(),
+                commit.getAuthorId(),
+                commit.getCommitterId(),
+                commit.getRepoName(),
+                commit.getRepoDescription()
+        );
+    }
+
+    public void createCommits(List<WriteCommitDTO> commits) {
+        String sql = "INSERT INTO Commits (message, commit_at, generate_at, repo_id, author_id, committer_id, repo_name, repo_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        List<Object[]> batchArgs = new ArrayList<>();
+        for (WriteCommitDTO commit : commits) {
+            batchArgs.add(new Object[]{
+                    commit.getMessage(),
+                    commit.getCommitAt(),
+                    commit.getGenerateAt(),
+                    commit.getRepoId(),
+                    commit.getAuthorId(),
+                    commit.getCommitterId(),
+                    commit.getRepoName(),
+                    commit.getRepoDescription()
+            });
         }
+
+        jdbcTemplate.batchUpdate(sql, batchArgs);
     }
 
-    private int createPlayer(Player player) {
-        final String sql = "INSERT INTO players (name) VALUES (?)";
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbcTemplate.update(
-                connection -> {
-                    PreparedStatement ps = connection.prepareStatement(sql, new String[] {"playerid"}); // Assuming 'playerID' is the generated column name
-                    ps.setString(1, player.getName());
-                    return ps;
-                },
-                keyHolder);
-
-        return keyHolder.getKey().intValue();
-    }
-
-    // Method to insert a new appearance
-    private void createAppearance(PlayerAppearance appearance, int playerId) {
-        String sql = "INSERT INTO appearances (gameID, leagueid, playerid, time, goals, ownGoals, xGoals, assists, position, positionOrder, xAssists, shots, keyPasses, yellowCard, redCard, xGoalsChain, xGoalsBuildup) VALUES (?, ?,  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    public void createGitUser(GitUser user) {
+        String sql = "INSERT INTO git_user (name, type, bio, email, login, company, blog, location, created_at, updated_at, hirable, is_suspicious) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         jdbcTemplate.update(sql,
-                appearance.getGameID(),
-                appearance.getLeagueID(),
-                playerId,
-                appearance.getTime(),
-                appearance.getGoals(),
-                appearance.getOwnGoals(),
-                appearance.getXGoals(),
-                appearance.getAssists(),
-                appearance.getPosition(),
-                appearance.getPositionOrder(),
-                appearance.getXAssists(),
-                appearance.getShots(),
-                appearance.getKeyPasses(),
-                appearance.getYellowCards(),
-                appearance.getRedCards(),
-                appearance.getXGoalsChain(),
-                appearance.getXGoalsBuildup()
-        );
-    }
-
-    private void createShot(PlayerShots shots, int playerId) {
-        String sql = "INSERT INTO shots (gameid, shooterid, assisterid, minute, situation, lastaction, shottype, shotresult, xgoal, positionx, positiony) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        jdbcTemplate.update(sql,
-                shots.getGameID(),
-                playerId,
-                shots.getAssisterID(),
-                shots.getMinute(),
-                shots.getSituation(),
-                shots.getLastAction(),
-                shots.getShotType(),
-                shots.getShotResult(),
-                shots.getXGoal(),
-                shots.getPositionX(),
-                shots.getPositionY()
-        );
-    }
-
-    public void createTeamStat(TeamStat teamStat) {
-        String sql = "INSERT INTO team_stats (gameID, teamID, season, date, location, goals, xGoals, shots, shotsOnTarget, deep, ppda, fouls, corners, yellowCards, redCards, result) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        jdbcTemplate.update(sql,
-                teamStat.getGameID(),
-                teamStat.getTeamID(),
-                teamStat.getSeason(),
-                new Timestamp(teamStat.getDate().getTime()), // Assuming getDate() returns a java.util.Date
-                String.valueOf(teamStat.getLocation()), // Assuming location is stored as a char or String
-                teamStat.getGoals(),
-                teamStat.getExpectedGoals(), // Assuming getExpectedGoals() returns a float or double
-                teamStat.getShots(),
-                teamStat.getShotsOnTarget(),
-                teamStat.getDeep(),
-                teamStat.getPpda(), // Assuming getPpda() returns a float or double
-                teamStat.getFouls(),
-                teamStat.getCorners(),
-                teamStat.getYellowCards(), // Assuming getYellowCards() returns an integer
-                teamStat.getRedCards(),
-                String.valueOf(teamStat.getResult()) // Assuming getResult() returns a char or String
-        );
-    }
-
-    public void createGame(Game game) {
-        String sql = "INSERT INTO games (leagueid, season, date, hometeamid, awayteamid, homegoals, awaygoals, homeprobability, drawprobability, awayprobability, homegoalshalftime, awaygoalshalftime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        jdbcTemplate.update(sql,
-                game.getLeagueId(),
-                game.getSeason(),
-                new Timestamp(game.getDate().getTime()), // Assuming getDate() returns a java.util.Date
-                game.getHomeTeamId(), // Assuming location is stored as a char or String
-                game.getAwayTeamId(),
-                game.getHomeGoals(), // Assuming getExpectedGoals() returns a float or double
-                game.getAwayGoals(),
-                game.getHomeProbability(),
-                game.getDrawProbability(),
-                game.getAwayProbability(), // Assuming getPpda() returns a float or double
-                game.getHomeGoalsHalfTime(),
-                game.getAwayGoalsHalfTime()
+                user.getName(),
+                user.getType(),
+                user.getBio(),
+                user.getEmail(),
+                user.getLogin(),
+                user.getCompany(),
+                user.getBlog(),
+                user.getLocation(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                user.getHirable(),
+                user.getIsSuspicious()
         );
     }
 }

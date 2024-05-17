@@ -21,130 +21,140 @@ public class MongoDbWriteRepository {
     private final MongoDatabase database;
 
 
-    public void updatePlayer(Player player) {
-        MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
+    public void createFullUser(FullUserDTO user) {
+        MongoCollection<Document> collection = database.getCollection("GithubData");
 
-        collection.insertOne(player(player));
-    }
-
-    private Document player(Player player) {
-        return new Document("playerID", player.getPlayerId())
-                .append("name", player.getName())
-                .append("appearances", appearances(player))
-                .append("shots", shots(player));
-    }
-
-    private List<Document> appearances(Player player) {
-        List<Document> appearancesDocs = new ArrayList<>();
-        for (PlayerAppearance appearance : player.getAppearances()) {
-            Document appearanceDoc = new Document("gameID", appearance.getGameID())
-                    .append("leagueID", appearance.getLeagueID())
-                    .append("time", appearance.getTime())
-                    .append("goals", appearance.getGoals())
-                    .append("ownGoals", appearance.getOwnGoals())
-                    .append("xGoals", appearance.getXGoals())
-                    .append("assists", appearance.getAssists())
-                    .append("position", appearance.getPosition())
-                    .append("positionOrder", appearance.getPositionOrder())
-                    .append("xAssists", appearance.getXAssists())
-                    .append("shots", appearance.getShots())
-                    .append("keyPasses", appearance.getKeyPasses())
-                    .append("yellowCards", appearance.getYellowCards())
-                    .append("redCards", appearance.getRedCards())
-                    .append("xGoalsChain", appearance.getXGoalsChain())
-                    .append("xGoalsBuildup", appearance.getXGoalsBuildup());
-            appearancesDocs.add(appearanceDoc);
+        List<Document> followerDocs = new ArrayList<>();
+        if (user.getFollowerList() != null) {
+            for (Integer followerId : user.getFollowerList()) {
+                followerDocs.add(new Document("follower_id", followerId));
+            }
         }
-        return appearancesDocs;
-    }
 
-    private List<Document> shots(Player player) {
-        List<Document> shotsDocs = new ArrayList<>();
-        for (PlayerShots shot : player.getShots()) {
-            Document appearanceDoc = new Document("gameID", shot.getGameID())
-                    .append("gameID", shot.getGameID())
-                    .append("shooterID", shot.getShooterID())
-                    .append("assisterID", shot.getAssisterID())
-                    .append("minute", shot.getMinute())
-                    .append("situation", shot.getSituation())
-                    .append("lastAction", shot.getLastAction())
-                    .append("shotType", shot.getShotType())
-                    .append("shotResult", shot.getShotResult())
-                    .append("xGoal", shot.getXGoal())
-                    .append("positionX", shot.getPositionX())
-                    .append("positionY", shot.getPositionY());
-            shotsDocs.add(appearanceDoc);
+        List<Document> followingDocs = new ArrayList<>();
+        if (user.getFollowingList() != null) {
+            for (Integer followingId : user.getFollowingList()) {
+                followingDocs.add(new Document("following_id", followingId));
+            }
         }
-        return shotsDocs;
+
+        List<Document> repoDocs = new ArrayList<>();
+        if (user.getRepoList() != null) {
+            for (FullUserDTO.RepositoryDTO repo : user.getRepoList()) {
+                repoDocs.add(new Document("repo_id", repo.getRepoId())
+                        .append("name", repo.getName())
+                        .append("description", repo.getDescription())
+                        .append("language", repo.getLanguage())
+                        .append("has_wiki", repo.getHasWiki())
+                        .append("created_at", repo.getCreatedAt())
+                        .append("updated_at", repo.getUpdatedAt())
+                        .append("pushed_at", repo.getPushedAt())
+                        .append("default_branch", repo.getDefaultBranch())
+                        .append("stargazers_count", repo.getStargazersCount())
+                        .append("open_issues", repo.getOpenIssues())
+                        .append("owner_id", repo.getOwnerId())
+                        .append("license", repo.getLicense())
+                        .append("size", repo.getSize())
+                        .append("fork", repo.getFork()));
+            }
+        }
+
+        List<Document> commitDocs = new ArrayList<>();
+        if (user.getCommitList() != null) {
+            for (FullUserDTO.CommitDTO commit : user.getCommitList()) {
+                commitDocs.add(new Document("commit_id", commit.getCommitId())
+                        .append("message", commit.getMessage())
+                        .append("commit_at", commit.getCommitAt())
+                        .append("generate_at", commit.getGenerateAt())
+                        .append("repo_id", commit.getRepoId())
+                        .append("author_id", commit.getAuthorId())
+                        .append("committer_id", commit.getCommitterId())
+                        .append("repo_name", commit.getRepoName())
+                        .append("repo_description", commit.getRepoDescription()));
+            }
+        }
+
+        Document userDoc = new Document("user_id", user.getUserId())
+                .append("name", user.getName())
+                .append("type", user.getType())
+                .append("bio", user.getBio())
+                .append("email", user.getEmail())
+                .append("login", user.getLogin())
+                .append("company", user.getCompany())
+                .append("blog", user.getBlog())
+                .append("location", user.getLocation())
+                .append("created_at", user.getCreatedAt())
+                .append("updated_at", user.getUpdatedAt())
+                .append("hirable", user.getHirable())
+                .append("is_suspicious", user.getIsSuspicious())
+                .append("follower_list", followerDocs)
+                .append("following_list", followingDocs)
+                .append("repo_list", repoDocs)
+                .append("commit_list", commitDocs);
+
+        collection.insertOne(userDoc);
     }
 
-    public void updateTeamStats(TeamStatMongo newStats) {
-        int gameID = newStats.getGameID();
 
-        MongoCollection<Document> collection = database.getCollection("Game_Leagues_Teams_TeamStats");
+    public void addCommitToUser(int userId, WriteCommitDTO commit) {
+        MongoCollection<Document> collection = database.getCollection("GithubData");
 
-        // Perform the update
-        collection.updateOne(filters(gameID), update(newStats, collection));
-    }
+        Document commitDoc = new Document("commit_id", commit.getCommitId())
+                .append("message", commit.getMessage())
+                .append("commit_at", commit.getCommitAt())
+                .append("generate_at", commit.getGenerateAt())
+                .append("repo_id", commit.getRepoId())
+                .append("author_id", commit.getAuthorId())
+                .append("committer_id", commit.getCommitterId())
+                .append("repo_name", commit.getRepoName())
+                .append("repo_description", commit.getRepoDescription());
 
-    private Bson update(TeamStatMongo newStats, MongoCollection<Document> collection) {
-        var isHomeTeam = isHomeTeam(newStats.getGameID(), newStats.getTeamID(), collection);
-        var teamStatPrefix = isHomeTeam ? "homeTeam.teamStats" : "awayTeam.teamStats";
-        var teamStatSuffix = isHomeTeam ? "_home" : "_away";
-
-        return combine(
-                set(teamStatPrefix + ".date" + teamStatSuffix, newStats.getDate()),
-                set(teamStatPrefix + ".location" + teamStatSuffix, newStats.getLocation()),
-                set(teamStatPrefix + ".goals" + teamStatSuffix, newStats.getGoals()),
-                set(teamStatPrefix + ".xGoals" + teamStatSuffix, newStats.getExpectedGoals()),
-                set(teamStatPrefix + ".shots" + teamStatSuffix, newStats.getShots()),
-                set(teamStatPrefix + ".shotsOnTarget" + teamStatSuffix, newStats.getShotsOnTarget()),
-                set(teamStatPrefix + ".deep" + teamStatSuffix, newStats.getDeep()),
-                set(teamStatPrefix + ".ppda" + teamStatSuffix, newStats.getPpda()),
-                set(teamStatPrefix + ".fouls" + teamStatSuffix, newStats.getFouls()),
-                set(teamStatPrefix + ".corners"+ teamStatSuffix, newStats.getCorners()),
-                set(teamStatPrefix + ".yellowCards"+ teamStatSuffix, newStats.getYellowCards()),
-                set(teamStatPrefix + ".redCards" + teamStatSuffix, newStats.getRedCards()),
-                set(teamStatPrefix + ".result" + teamStatSuffix, newStats.getResult())
+        collection.updateOne(
+                new Document("user_id", userId),
+                new Document("$push", new Document("commit_list", commitDoc))
         );
     }
 
-    private boolean isHomeTeam(Integer gameID, Integer teamID, MongoCollection<Document> collection) {
-        Bson filter = Filters.eq("gameID", gameID);
+    public void addCommitsToUser(int userId, List<WriteCommitDTO> commits) {
+        MongoCollection<Document> collection = database.getCollection("GithubData");
 
-        // Fetch the game document
-        Document gameDocument = collection.find(filter).first();
-
-        if (gameDocument != null) {
-            Document homeTeam = (Document) gameDocument.get("homeTeam");
-            if (homeTeam != null) {
-                Integer homeTeamID = homeTeam.getInteger("teamID");
-                return homeTeamID.equals(teamID);
-            }
+        List<Document> commitDocs = new ArrayList<>();
+        for (WriteCommitDTO commit : commits) {
+            Document commitDoc = new Document("commit_id", commit.getCommitId())
+                    .append("message", commit.getMessage())
+                    .append("commit_at", commit.getCommitAt())
+                    .append("generate_at", commit.getGenerateAt())
+                    .append("repo_id", commit.getRepoId())
+                    .append("author_id", commit.getAuthorId())
+                    .append("committer_id", commit.getCommitterId())
+                    .append("repo_name", commit.getRepoName())
+                    .append("repo_description", commit.getRepoDescription());
+            commitDocs.add(commitDoc);
         }
-        return false;
+
+        collection.updateOne(
+                new Document("user_id", userId),
+                new Document("$push", new Document("commit_list", new Document("$each", commitDocs)))
+        );
     }
 
-    private Bson filters(int gameID) {
-        return Filters.eq("gameID", gameID);
-    }
+    public void createGitUser(GitUser user) {
+        MongoCollection<Document> collection = database.getCollection("GithubData");
 
-    public void updateGame(Game game) {
-        MongoCollection<Document> collection = database.getCollection("Game_Leagues_Teams_TeamStats");
-        collection.insertOne(game(game));
-    }
+        Document doc = new Document("user_id", user.getUserId())
+                .append("name", user.getName())
+                .append("type", user.getType())
+                .append("bio", user.getBio())
+                .append("email", user.getEmail())
+                .append("login", user.getLogin())
+                .append("company", user.getCompany())
+                .append("blog", user.getBlog())
+                .append("location", user.getLocation())
+                .append("created_at", user.getCreatedAt())
+                .append("updated_at", user.getUpdatedAt())
+                .append("hirable", user.getHirable())
+                .append("is_suspicious", user.getIsSuspicious());
 
-    private Document game(Game game) {
-        return new Document("gameID", game.getGameId())
-                .append("date", game.getDate())
-                .append("leagueName", game.getLeagueName())
-                .append("season", game.getSeason())
-                .append("homeGoals", game.getHomeGoals())
-                .append("awayGoals", game.getAwayGoals())
-                .append("homeProbability", game.getHomeProbability())
-                .append("awayProbability", game.getAwayProbability())
-                .append("drawProbability", game.getDrawProbability())
-                .append("homeGoalsHalfTime", game.getHomeGoalsHalfTime())
-                .append("awayGoalsHalfTime", game.getAwayGoalsHalfTime());
+        collection.insertOne(doc);
     }
 }
