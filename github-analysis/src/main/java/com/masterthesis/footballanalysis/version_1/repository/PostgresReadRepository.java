@@ -17,7 +17,20 @@ public class PostgresReadRepository {
                 "FROM git_user g  " +
                 "LEFT JOIN followers f ON g.user_id = f.user_id  " +
                 "WHERE f.user_id IS NULL " +
-                "LIMIT 1000000 ";
+                "LIMIT 10000 ";
+        return jdbcTemplate.query(query, (rs, rowNum) -> {
+            Query1DTOPostgres query1 = new Query1DTOPostgres();
+            query1.setUserId(rs.getInt("user_id"));
+            query1.setName(rs.getString("name"));
+            query1.setLogin(rs.getString("login"));
+            return query1;
+        });
+    }
+
+    public List<Query1DTOPostgres> query1_2() {
+        String query = "SELECT g.user_id, g.name, g.login " +
+                "FROM git_user g  " +
+                "LIMIT 10 ";
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query1DTOPostgres query1 = new Query1DTOPostgres();
             query1.setUserId(rs.getInt("user_id"));

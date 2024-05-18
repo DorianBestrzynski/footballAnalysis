@@ -22,6 +22,12 @@ public class VersionOneController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/pg/query-1-2")
+    public ResponseEntity<List<Query1DTOPostgres>> query1_2Pg() {
+        var result = service.query1_2Postgres();
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping("/pg/query-2")
     public ResponseEntity<List<Query2DTO>> query2Pg() {
         var result = service.query2Postgres();
@@ -79,6 +85,12 @@ public class VersionOneController {
     @GetMapping("/mongo/query-1")
     public ResponseEntity<List<Query1DTOMongo>> query1Mongo() {
         var result = service.query1Mongo();
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/mongo/query-1-2")
+    public ResponseEntity<List<Query1DTOMongo>> query1_2Mongo() {
+        var result = service.query1_2Mongo();
         return ResponseEntity.ok(result);
     }
 

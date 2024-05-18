@@ -7,7 +7,7 @@ import io.gatling.http.protocol.HttpProtocolBuilder
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import scala.io.Source
 import scala.util.{Random, Using}
@@ -19,11 +19,11 @@ class Write1 extends Simulation {
     .header("Content-Type", "application/json")
 
   def randomDateTime(startDate: String, endDate: String): String = {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    val start = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-    val end = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-    val randomEpochSecond = start.toEpochSecond(java.time.ZoneOffset.UTC) + Random.nextLong((end.toEpochSecond(java.time.ZoneOffset.UTC) - start.toEpochSecond(java.time.ZoneOffset.UTC)))
-    LocalDateTime.ofEpochSecond(randomEpochSecond, 0, java.time.ZoneOffset.UTC).format(formatter)
+    val formatter = DateTimeFormatter.ISO_INSTANT
+    val start = Instant.parse(startDate)
+    val end = Instant.parse(endDate)
+    val randomEpochSecond = start.getEpochSecond + Random.nextLong(end.getEpochSecond - start.getEpochSecond)
+    Instant.ofEpochSecond(randomEpochSecond).atOffset(ZoneOffset.UTC).format(formatter)
   }
 
   def generateFollowerList(numFollowers: Int): String = {
@@ -101,9 +101,9 @@ class Write1 extends Simulation {
   }
 
   val createFullUserScenario: ScenarioBuilder = scenario("Create Full User in MongoDB")
-    .repeat(1) {
+    .repeat(10) {
       exec(session => {
-        val fullUserBody = generateFullUserBody(5, 5, 3, 10) // Generate 5 followers, 5 followings, 3 repositories, and 10 commits
+        val fullUserBody = generateFullUserBody(10000, 10000, 10000, 10000) // Generate 5 followers, 5 followings, 3 repositories, and 10 commits
         session.set("fullUserBody", fullUserBody)
       })
         .exec(http("Create Full User")
@@ -114,6 +114,6 @@ class Write1 extends Simulation {
     }
 
   setUp(
-    createFullUserScenario.inject(atOnceUsers(10)) // Execute the scenario for 10 users at once
+    createFullUserScenario.inject(atOnceUsers(1)) // Execute the scenario for 10 users at once
   ).protocols(httpProtocol)
 }

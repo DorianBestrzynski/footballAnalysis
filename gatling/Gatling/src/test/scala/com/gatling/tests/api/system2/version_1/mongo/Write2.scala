@@ -5,7 +5,7 @@ import io.gatling.core.structure.ScenarioBuilder
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import scala.io.Source
 import scala.util.{Random, Using}
@@ -28,11 +28,11 @@ class Write2 extends Simulation {
 
 
   def randomDateTime(startDate: String, endDate: String): String = {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    val start = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-    val end = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-    val randomEpochSecond = start.toEpochSecond(java.time.ZoneOffset.UTC) + Random.nextLong((end.toEpochSecond(java.time.ZoneOffset.UTC) - start.toEpochSecond(java.time.ZoneOffset.UTC)))
-    LocalDateTime.ofEpochSecond(randomEpochSecond, 0, java.time.ZoneOffset.UTC).format(formatter)
+    val formatter = DateTimeFormatter.ISO_INSTANT
+    val start = Instant.parse(startDate)
+    val end = Instant.parse(endDate)
+    val randomEpochSecond = start.getEpochSecond + Random.nextLong(end.getEpochSecond - start.getEpochSecond)
+    Instant.ofEpochSecond(randomEpochSecond).atOffset(ZoneOffset.UTC).format(formatter)
   }
 
   def generateCommitBody(): String = {
@@ -63,9 +63,9 @@ class Write2 extends Simulation {
   }
 
   val createCommitScenario: ScenarioBuilder = scenario("Create Commits in Mongo")
-    .repeat(1) {
+    .repeat(10) {
       exec(session => {
-        val commitListBody = generateCommitListBody(10) // Generate 10 commit objects
+        val commitListBody = generateCommitListBody(10000) // Generate 10 commit objects
         session.set("commitListBody", commitListBody)
       })
         .exec(http("Create Commits")
@@ -76,7 +76,7 @@ class Write2 extends Simulation {
     }
 
   setUp(
-    createCommitScenario.inject(atOnceUsers(10)) // Execute the scenario for 10 users at once
+    createCommitScenario.inject(atOnceUsers(1)) // Execute the scenario for 10 users at once
   ).protocols(httpProtocol)
 }
 

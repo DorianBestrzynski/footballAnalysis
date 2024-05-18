@@ -4,12 +4,15 @@ import com.masterthesis.footballanalysis.version_1.dto.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.Updates;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.mongodb.client.model.Updates.combine;
@@ -95,29 +98,10 @@ public class MongoDbWriteRepository {
         collection.insertOne(userDoc);
     }
 
-
-    public void addCommitToUser(int userId, WriteCommitDTO commit) {
-        MongoCollection<Document> collection = database.getCollection("GithubData");
-
-        Document commitDoc = new Document("commit_id", commit.getCommitId())
-                .append("message", commit.getMessage())
-                .append("commit_at", commit.getCommitAt())
-                .append("generate_at", commit.getGenerateAt())
-                .append("repo_id", commit.getRepoId())
-                .append("author_id", commit.getAuthorId())
-                .append("committer_id", commit.getCommitterId())
-                .append("repo_name", commit.getRepoName())
-                .append("repo_description", commit.getRepoDescription());
-
-        collection.updateOne(
-                new Document("user_id", userId),
-                new Document("$push", new Document("commit_list", commitDoc))
-        );
-    }
-
     public void addCommitsToUser(int userId, List<WriteCommitDTO> commits) {
         MongoCollection<Document> collection = database.getCollection("GithubData");
 
+        // Prepare commit documents
         List<Document> commitDocs = new ArrayList<>();
         for (WriteCommitDTO commit : commits) {
             Document commitDoc = new Document("commit_id", commit.getCommitId())
@@ -132,9 +116,10 @@ public class MongoDbWriteRepository {
             commitDocs.add(commitDoc);
         }
 
+        // Single update operation
         collection.updateOne(
-                new Document("user_id", userId),
-                new Document("$push", new Document("commit_list", new Document("$each", commitDocs)))
+                Filters.eq("id", userId),
+                Updates.set("commit_list", commitDocs)
         );
     }
 

@@ -24,6 +24,10 @@ public class VersionOneService {
         return postgresReadRepository.query1();
     }
 
+    public List<Query1DTOPostgres> query1_2Postgres() {
+        return postgresReadRepository.query1_2();
+    }
+
     public List<Query2DTO> query2Postgres() {
         return postgresReadRepository.query2();
     }
@@ -58,8 +62,7 @@ public class VersionOneService {
         }
         if (writeCommitDTOS.size() == 1) {
             postgresWriteRepository.createCommit(writeCommitDTOS.get(0));
-        }
-        else {
+        } else {
             postgresWriteRepository.createCommits(writeCommitDTOS);
         }
     }
@@ -70,6 +73,10 @@ public class VersionOneService {
 
     public List<Query1DTOMongo> query1Mongo() {
         return mongoDbReadRepository.query1();
+    }
+
+    public List<Query1DTOMongo> query1_2Mongo() {
+        return mongoDbReadRepository.query1_2();
     }
 
     public List<Query2DTO> query2Mongo() {
@@ -105,12 +112,7 @@ public class VersionOneService {
             return;
         }
         var userId = writeCommitDTOS.getFirst().getAuthorId();
-        if (writeCommitDTOS.size() == 1) {
-            mongoDbWriteRepository.addCommitToUser(userId, writeCommitDTOS.get(0));
-        }
-        else {
-            mongoDbWriteRepository.addCommitsToUser(userId, writeCommitDTOS);
-        }
+        mongoDbWriteRepository.addCommitsToUser(userId, writeCommitDTOS);
     }
 
     public void write3Mongo(GitUser gitUser) {

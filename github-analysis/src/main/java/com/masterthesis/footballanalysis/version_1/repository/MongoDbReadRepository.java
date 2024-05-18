@@ -27,7 +27,26 @@ public class MongoDbReadRepository {
                 .projection(new Document("id", 1L)
                         .append("name", 1L)
                         .append("login", 1L))
-                .limit(1000000);
+                .limit(10000);
+
+        List<Query1DTOMongo> query1List = new ArrayList<>();
+        for (Document doc : result) {
+            Query1DTOMongo query1 = new Query1DTOMongo();
+            query1.setUserId(doc.getInteger("id"));
+            query1.setName(doc.getString("name"));
+            query1.setLogin(doc.getString("login"));
+            query1List.add(query1);
+        }
+        return query1List;
+    }
+
+    public List<Query1DTOMongo> query1_2() {
+        MongoCollection<Document> collection = database.getCollection("GithubData");
+        FindIterable<Document> result = collection.find()
+                .projection(new Document("id", 1L)
+                        .append("name", 1L)
+                        .append("login", 1L))
+                .limit(10);
 
         List<Query1DTOMongo> query1List = new ArrayList<>();
         for (Document doc : result) {

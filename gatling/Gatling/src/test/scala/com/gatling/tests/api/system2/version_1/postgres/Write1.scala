@@ -5,7 +5,7 @@ import io.gatling.core.structure.ScenarioBuilder
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
-import java.time.LocalDate
+import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import scala.io.Source
 import scala.util.{Random, Using}
@@ -17,19 +17,27 @@ class Write1 extends Simulation {
     .header("Content-Type", "application/json")
 
   def randomDateTime(startDate: String, endDate: String): String = {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    val start = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-    val end = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-    val randomEpochSecond = start.toEpochSecond(java.time.ZoneOffset.UTC) + Random.nextLong((end.toEpochSecond(java.time.ZoneOffset.UTC) - start.toEpochSecond(java.time.ZoneOffset.UTC)))
-    LocalDateTime.ofEpochSecond(randomEpochSecond, 0, java.time.ZoneOffset.UTC).format(formatter)
+    val formatter = DateTimeFormatter.ISO_INSTANT
+    val start = Instant.parse(startDate)
+    val end = Instant.parse(endDate)
+    val randomEpochSecond = start.getEpochSecond + Random.nextLong(end.getEpochSecond - start.getEpochSecond)
+    Instant.ofEpochSecond(randomEpochSecond).atOffset(ZoneOffset.UTC).format(formatter)
   }
 
-  def generateFollowerList(numFollowers: Int): String = {
-    (1 to numFollowers).map(_ => Random.nextInt(10000)).mkString("[", ", ", "]")
+  def generateUniqueFollowerList(numFollowers: Int): String = {
+    val followers = scala.collection.mutable.Set[Int]()
+    while (followers.size < numFollowers) {
+      followers += Random.nextInt(10000)
+    }
+    followers.mkString("[", ", ", "]")
   }
 
-  def generateFollowingList(numFollowing: Int): String = {
-    (1 to numFollowing).map(_ => Random.nextInt(10000)).mkString("[", ", ", "]")
+  def generateUniqueFollowingList(numFollowing: Int): String = {
+    val following = scala.collection.mutable.Set[Int]()
+    while (following.size < numFollowing) {
+      following += Random.nextInt(10000)
+    }
+    following.mkString("[", ", ", "]")
   }
 
   def generateRepoList(numRepos: Int): String = {
@@ -90,8 +98,8 @@ class Write1 extends Simulation {
       "updatedAt": "${randomDateTime("2015-01-01T00:00:00.000Z", "2024-04-02T23:59:59.999Z")}",
       "hirable": ${Random.nextBoolean()},
       "isSuspicious": ${Random.nextBoolean()},
-      "followerList": ${generateFollowerList(numFollowers)},
-      "followingList": ${generateFollowingList(numFollowing)},
+      "followerList": ${generateUniqueFollowerList(numFollowers)},
+      "followingList": ${generateUniqueFollowingList(numFollowing)},
       "repoList": ${generateRepoList(numRepos)},
       "commitList": ${generateCommitList(numCommits)}
     }
@@ -99,9 +107,9 @@ class Write1 extends Simulation {
   }
 
   val createFullUserScenario: ScenarioBuilder = scenario("Create Full User in Postgres")
-    .repeat(1) {
+    .repeat(10) {
       exec(session => {
-        val fullUserBody = generateFullUserBody(5, 5, 3, 10) // Generate 5 followers, 5 followings, 3 repositories, and 10 commits
+        val fullUserBody = generateFullUserBody(10000, 10000, 10000, 10000) // Generate 5 followers, 5 followings, 3 repositories, and 10 commits
         session.set("fullUserBody", fullUserBody)
       })
         .exec(http("Create Full User")
@@ -112,6 +120,6 @@ class Write1 extends Simulation {
     }
 
   setUp(
-    createFullUserScenario.inject(atOnceUsers(10)) // Execute the scenario for 10 users at once
+    createFullUserScenario.inject(atOnceUsers(1)) // Execute the scenario for 10 users at once
   ).protocols(httpProtocol)
 }
