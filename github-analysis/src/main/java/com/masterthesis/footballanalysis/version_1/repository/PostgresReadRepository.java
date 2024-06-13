@@ -30,7 +30,8 @@ public class PostgresReadRepository {
     public List<Query1DTOPostgres> query1_2() {
         String query = "SELECT g.user_id, g.name, g.login " +
                 "FROM git_user g  " +
-                "LIMIT 10 ";
+                "WHERE g.user_id=763 ";
+
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query1DTOPostgres query1 = new Query1DTOPostgres();
             query1.setUserId(rs.getInt("user_id"));
@@ -44,10 +45,22 @@ public class PostgresReadRepository {
         String query = "SELECT c.message, g.name AS author_name  " +
                 "FROM Commits c  " +
                 "JOIN git_user g ON c.author_id = g.user_id " +
-                "LIMIT 1000000 ";
+                "WHERE g.user_id=856 ";
+
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query2DTO query2 = new Query2DTO();
             query2.setAuthorName(rs.getString("author_name"));
+            query2.setCommitMessage(rs.getString("message"));
+            return query2;
+        });
+    }
+
+    public List<Query2DTO> query2_2() {
+        String query = "SELECT c.message " +
+                "FROM Commits c  " +
+                "LIMIT 1000000 ";
+        return jdbcTemplate.query(query, (rs, rowNum) -> {
+            Query2DTO query2 = new Query2DTO();
             query2.setCommitMessage(rs.getString("message"));
             return query2;
         });
@@ -57,7 +70,7 @@ public class PostgresReadRepository {
         String query = "SELECT g.user_id, g.name, r.repo_id, r.name AS repo_name  " +
                 "FROM git_user g   " +
                 "JOIN Repository r ON g.user_id = r.owner_id " +
-                "LIMIT 1000000 ";
+                "WHERE g.user_id=704 ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query3DTOPostgres query3 = new Query3DTOPostgres();
@@ -77,8 +90,8 @@ public class PostgresReadRepository {
                 "LEFT JOIN UserRepositories ur ON u.user_id = ur.user_id " +
                 "LEFT JOIN Repository r ON ur.repo_id = r.repo_id " +
                 "LEFT JOIN Commits c ON r.repo_id = c.repo_id " +
-                "ORDER BY u.user_id, r.repo_id, c.commit_id " +
-                "LIMIT 100 ";
+                "WHERE u.user_id=380 " +
+                "ORDER BY u.user_id, r.repo_id, c.commit_id ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query4DTOPostgres query4 = new Query4DTOPostgres();
@@ -99,7 +112,7 @@ public class PostgresReadRepository {
                 "FROM git_user g " +
                 "JOIN Repository r ON g.user_id = r.owner_id " +
                 "JOIN Commits c ON r.repo_id = c.repo_id " +
-                "LIMIT 5000 ";
+                "WHERE g.user_id=282 ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query4v2DTO query4 = new Query4v2DTO();
@@ -116,6 +129,7 @@ public class PostgresReadRepository {
     public List<Query5DTO> query5() {
         String query = "SELECT location, COUNT(user_id) AS user_count " +
                 "FROM git_user " +
+                "WHERE location = 'New York' " +
                 "GROUP BY location " +
                 "ORDER BY user_count DESC " +
                 "LIMIT 100 ";
@@ -133,9 +147,9 @@ public class PostgresReadRepository {
                 "FROM git_user u " +
                 "JOIN Repository r ON u.user_id = r.owner_id " +
                 "JOIN Commits c ON r.repo_id = c.repo_id " +
+                "WHERE u.user_id=176 " +
                 "GROUP BY u.user_id, u.name, r.repo_id, r.name, commit_month " +
-                "ORDER BY u.user_id, r.repo_id, commit_month " +
-                "LIMIT 10 ";
+                "ORDER BY u.user_id, r.repo_id, commit_month ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query6DTO query6 = new Query6DTO();

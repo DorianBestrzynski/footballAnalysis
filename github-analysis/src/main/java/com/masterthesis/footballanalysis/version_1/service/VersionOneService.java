@@ -32,6 +32,10 @@ public class VersionOneService {
         return postgresReadRepository.query2();
     }
 
+    public List<Query2DTO> query2_2Postgres() {
+        return postgresReadRepository.query2_2();
+    }
+
     public List<Query3DTOPostgres> query3Postgres() {
         return postgresReadRepository.query3();
     }
@@ -83,6 +87,10 @@ public class VersionOneService {
         return mongoDbReadRepository.query2();
     }
 
+    public List<Query2DTO> query2_2Mongo() {
+        return mongoDbReadRepository.query2_2();
+    }
+
     public List<Query3DTOMongo> query3Mongo() {
         return mongoDbReadRepository.query3();
     }
@@ -117,5 +125,17 @@ public class VersionOneService {
 
     public void write3Mongo(GitUser gitUser) {
         mongoDbWriteRepository.createGitUser(gitUser);
+    }
+
+    public void test() {
+        int i = 5;
+
+        double d = i;
+
+        Double d2 = d;
+
+        Integer a = 5;
+
+        Double b = Double.valueOf(a);
     }
 }

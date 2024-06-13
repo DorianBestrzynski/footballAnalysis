@@ -15,8 +15,7 @@ public class PostgresReadRepository {
     public List<Query1DTOPostgres> query1(int awayGoals) {
         String query = "SELECT gameId, leagueId, season, date, homeGoals, awayGoals " +
                 "FROM games " +
-                "WHERE awayGoals > ? " +
-                "LIMIT 100 ";
+                "WHERE awayGoals > ? ";
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query1DTOPostgres query1 = new Query1DTOPostgres();
             query1.setGameId(rs.getInt("gameId"));
@@ -50,7 +49,7 @@ public class PostgresReadRepository {
         String query = "SELECT playerId, name, minute, situation, lastaction, shottype, shotresult " +
                 "FROM players p " +
                 "JOIN shots s ON s.shooterId = p.playerId " +
-                "LIMIT 100000 ";
+                "WHERE p.playerId = 555 ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query3DTOPostgres query3 = new Query3DTOPostgres();
@@ -72,9 +71,7 @@ public class PostgresReadRepository {
                 "JOIN teams ht ON g.homeTeamID = ht.teamId " +
                 "JOIN teams at ON g.awayTeamID = at.teamId " +
                 "LEFT JOIN team_stats ts ON ts.gameID = g.gameID AND ts.teamId = ht.teamId " +
-                "ORDER BY ts.shots DESC " +
-                "LIMIT 100 ";
-
+                "ORDER BY ts.shots DESC ";
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query4DTOPostgres query4 = new Query4DTOPostgres();
             query4.setLeagueName(rs.getString("LeagueName"));
@@ -89,7 +86,7 @@ public class PostgresReadRepository {
         String query = "SELECT g.gameId, g.season, s.shottype, s.shotresult " +
                 "FROM shots s " +
                 "JOIN games g ON s.gameid = g.gameId " +
-                "LIMIT 100 ";
+                "LIMIT 10 ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query5DTO query5 = new Query5DTO();
@@ -107,7 +104,7 @@ public class PostgresReadRepository {
                 "JOIN players p ON a.playerId = p.playerId " +
                 "JOIN games g ON a.gameId = g.gameID " +
                 "JOIN leagues l ON l.leagueId = g.leagueId " +
-                "LIMIT 100000 ";
+                "LIMIT 10 ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query6DTO query6 = new Query6DTO();
@@ -129,6 +126,7 @@ public class PostgresReadRepository {
                 "    appearances a " +
                 "JOIN " +
                 "    players p ON a.playerID = p.playerID " +
+                "WHERE p.playerId = 447 " +
                 "GROUP BY " +
                 "    p.name " +
                 "HAVING " +
@@ -158,9 +156,9 @@ public class PostgresReadRepository {
                 "JOIN teams at ON g.awayTeamID = at.teamId " +
                 "JOIN leagues l ON g.leagueID = l.leagueID " +
                 "JOIN team_stats ts ON ts.gameID = g.gameID " +
+                "WHERE g.gameId = 9887 " +
                 "GROUP BY l.name, g.date, ht.name, at.name, g.gameId " +
-                "ORDER BY TotalShots DESC " +
-                "LIMIT 100 ";
+                "ORDER BY TotalShots DESC ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query8DTOPostgres query8 = new Query8DTOPostgres();
@@ -193,6 +191,7 @@ public class PostgresReadRepository {
                 "JOIN players p ON a.playerId = p.playerId " +
                 "JOIN games g ON a.gameId = g.gameID " +
                 "JOIN leagues l ON l.leagueId = g.leagueId " +
+                "WHERE p.playerId = 2371  " +
                 "GROUP BY p.name, g.season " +
                 "ORDER BY g.season, SUM(a.goals) DESC " +
                 "LIMIT 100 ";

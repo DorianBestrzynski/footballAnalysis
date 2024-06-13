@@ -39,7 +39,6 @@ class Write2 extends Simulation {
     val gameId = Random.shuffle(gameIds).head
     val teamId = Random.shuffle(teamIds).head
     val shots = Random.nextInt(201)
-    // Generate a random body for the update. This is just an example, adapt it to your needs.
     s"""
         {
           "gameID": $gameId,

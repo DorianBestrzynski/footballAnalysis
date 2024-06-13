@@ -33,8 +33,7 @@ public class MongoDbReadRepository {
                         .append("homeTeamID", 1L)
                         .append("awayTeamID", 1L)
                         .append("homeGoals", 1L)
-                        .append("awayGoals", 1L))
-                .limit(100);
+                        .append("awayGoals", 1L));
 
         List<Query1DTOMongo> query1List = new ArrayList<>();
         for (Document doc : result) {
@@ -80,18 +79,20 @@ public class MongoDbReadRepository {
 
     public List<Query3DTOMongo> query3() {
         MongoCollection<Document> collection = database.getCollection(STATISTICS_COLLECTION);
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$unwind",
                         new Document("path", "$shots")
                                 .append("preserveNullAndEmptyArrays", false)),
+                new Document("$match", new Document("shots.playerId", 555)),
                 new Document("$project",
-                        new Document("playerID", 1L)
-                                .append("name", 1L)
+                        new Document("playerId", "$shots.playerId")
+                                .append("name", "$shots. name")
                                 .append("minute", "$shots.minute")
                                 .append("situation", "$shots.situation")
                                 .append("lastAction", "$shots.lastAction")
                                 .append("shotType", "$shots.shotType")
-                                .append("shotResult", "$shots.shotResult")),
-                new Document("$limit", 100000));
+                                .append("shotResult", "$shots.shotResult")));
+
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -99,7 +100,7 @@ public class MongoDbReadRepository {
         List<Query3DTOMongo> query3DTOMongoList = new ArrayList<>();
         for (Document doc : result) {
             Query3DTOMongo query3 = new Query3DTOMongo();
-            query3.setPlayerId(doc.getInteger("playerID"));
+            query3.setPlayerId(doc.getInteger("playerId"));
             query3.setName(doc.getString("name"));
             query3.setMinute(doc.getInteger("minute"));
             query3.setSituation(doc.getString("situation"));
@@ -114,7 +115,8 @@ public class MongoDbReadRepository {
     public List<Query4DTOMongo> query4() {
         MongoCollection<Document> collection = database.getCollection(STATISTICS_COLLECTION);
 
-        List<Document> pipeline = Arrays.asList(new Document("$project",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$project",
                         new Document("LeagueName", "$leagueName")
                                 .append("Match",
                                         new Document("$concat", Arrays.asList("$homeTeam.name", " vs ", "$awayTeam.name")))
@@ -142,7 +144,8 @@ public class MongoDbReadRepository {
     public List<Query5DTO> query5() {
         MongoCollection<Document> collection = database.getCollection(STATISTICS_COLLECTION);
 
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$unwind",
                         new Document("path", "$shots")
                                 .append("preserveNullAndEmptyArrays", false)),
                 new Document("$project",
@@ -150,7 +153,8 @@ public class MongoDbReadRepository {
                                 .append("season", "$season")
                                 .append("shotType", "$shots.shotType")
                                 .append("shotResult", "$shots.shotResult")),
-                new Document("$limit", 100));
+        new Document("$limit", 10));
+
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -178,7 +182,7 @@ public class MongoDbReadRepository {
                                 .append("season", "$season")
                                 .append("leagueName", "$leagueName")
                                 .append("goals", "$appearances.goals")),
-                new Document("$limit", 100000));
+                new Document("$limit", 10));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -203,6 +207,7 @@ public class MongoDbReadRepository {
         List<Document> pipeline = Arrays.asList(new Document("$unwind",
                         new Document("path", "$appearances")
                                 .append("preserveNullAndEmptyArrays", false)),
+                new Document("$match", new Document("appearances.playerID", 447)),
                 new Document("$group",
                         new Document("_id", "$appearances. name")
                                 .append("TotalAssists",
@@ -244,7 +249,9 @@ public class MongoDbReadRepository {
         MongoCollection<Document> collection = database.getCollection(STATISTICS_COLLECTION);
 
         // Define your aggregation pipeline
-        List<Document> pipeline = Arrays.asList(new Document("$project",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("gameID", 9887)),
+                new Document("$project",
                         new Document("LeagueName", "$leagueName")
                                 .append("Match",
                                         new Document("$concat", Arrays.asList("$homeTeam.name", " vs ", "$awayTeam.name")))
@@ -331,6 +338,7 @@ public class MongoDbReadRepository {
         List<Document> pipeline = Arrays.asList(new Document("$unwind",
                         new Document("path", "$appearances")
                                 .append("preserveNullAndEmptyArrays", false)),
+                new Document("$match", new Document("appearances.playerID", 2371)),
                 new Document("$group",
                         new Document("_id",
                                 new Document("name", "$appearances. name")

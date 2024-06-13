@@ -166,7 +166,8 @@ public class MongoDbReadRepository {
     public List<Query5DTOMongo> query5() {
         MongoCollection<Document> collection = database.getCollection("Statistics");
 
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$unwind",
                         new Document("path", "$shots")
                                 .append("preserveNullAndEmptyArrays", false)),
                 new Document("$group",
@@ -191,7 +192,7 @@ public class MongoDbReadRepository {
                 new Document("$sort",
                         new Document("date", -1L)
                                 .append("goalsScored", -1L)),
-                new Document("$limit", 100));
+                new Document("$limit", 10));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -212,7 +213,9 @@ public class MongoDbReadRepository {
     public List<Query6DTOMongo> query6() {
         MongoCollection<Document> collection = database.getCollection("Statistics");
 
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("gameID", 16129)),
+                new Document("$unwind",
                         new Document("path", "$appearances")
                                 .append("preserveNullAndEmptyArrays", false)),
                 new Document("$unwind",

@@ -26,8 +26,7 @@ public class MongoDbReadRepository {
         FindIterable<Document> result = collection.find(new Document("followers", new Document("$eq", 0)))
                 .projection(new Document("id", 1L)
                         .append("name", 1L)
-                        .append("login", 1L))
-                .limit(10000);
+                        .append("login", 1L));
 
         List<Query1DTOMongo> query1List = new ArrayList<>();
         for (Document doc : result) {
@@ -42,11 +41,10 @@ public class MongoDbReadRepository {
 
     public List<Query1DTOMongo> query1_2() {
         MongoCollection<Document> collection = database.getCollection("GithubData");
-        FindIterable<Document> result = collection.find()
-                .projection(new Document("id", 1L)
-                        .append("name", 1L)
-                        .append("login", 1L))
-                .limit(10);
+        FindIterable<Document> result = collection.find(new Document("id", 763))
+                .projection(new Document("id", 1)
+                                .append("name", 1)
+                                .append("login", 1));
 
         List<Query1DTOMongo> query1List = new ArrayList<>();
         for (Document doc : result) {
@@ -62,10 +60,10 @@ public class MongoDbReadRepository {
     public List<Query2DTO> query2() {
         MongoCollection<Document> collection = database.getCollection("GithubData");
         List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("id", 856)),
                 new Document("$unwind", "$commit_list"),
                 new Document("$project", new Document("message", "$commit_list.message")
-                        .append("name", 1L)),
-                new Document("$limit", 1000000));
+                        .append("name", 1L)));
 
         AggregateIterable<Document> result = collection.aggregate(pipeline);
 
@@ -79,15 +77,33 @@ public class MongoDbReadRepository {
         return query2List;
     }
 
+    public List<Query2DTO> query2_2() {
+        MongoCollection<Document> collection = database.getCollection("GithubData");
+        List<Document> pipeline = Arrays.asList(
+                new Document("$unwind", "$commit_list"),
+                new Document("$project", new Document("message", "$commit_list.message")),
+                new Document("$limit", 1000000));
+
+        AggregateIterable<Document> result = collection.aggregate(pipeline);
+
+        List<Query2DTO> query2List = new ArrayList<>();
+        for (Document doc : result) {
+            Query2DTO query2 = new Query2DTO();
+            query2.setCommitMessage(doc.getString("message"));
+            query2List.add(query2);
+        }
+        return query2List;
+    }
+
     public List<Query3DTOMongo> query3() {
         MongoCollection<Document> collection = database.getCollection("GithubData");
         List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("id", 704)),
                 new Document("$unwind", "$repo_list"),
                 new Document("$project", new Document("id", 1L)
                         .append("name", 1L)
                         .append("repo_id", "$repo_list.id")
-                        .append("repo_name", "$repo_list.full_name")),
-                new Document("$limit", 1000000));
+                        .append("repo_name", "$repo_list.full_name")));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -108,13 +124,13 @@ public class MongoDbReadRepository {
         MongoCollection<Document> collection = database.getCollection("GithubData");
 
         List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("id", 380)),
                 new Document("$project", new Document("user_id", 1L)
                         .append("name", 1L)
                         .append("follower_list", 1L)
                         .append("following_list", 1L)
                         .append("repo_list", 1L)
-                        .append("commit_list", 1L)),
-                new Document("$limit", 100));
+                        .append("commit_list", 1L)));
 
 
         // Execute the aggregation pipeline
@@ -131,6 +147,7 @@ public class MongoDbReadRepository {
         MongoCollection<Document> collection = database.getCollection("GithubData");
 
         List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("id", 282)),
                 new Document("$unwind", "$repo_list"),
                 new Document("$lookup", new Document("from", "GithubData")
                         .append("localField", "repo_list.id")
@@ -141,13 +158,11 @@ public class MongoDbReadRepository {
                         .append("repo_id", "$repo_list.id")
                         .append("repo_name", "$repo_list.full_name")
                         .append("commit_id", "$commits.commit_list.commit_id")
-                        .append("commit_message", "$commits.commit_list.message")),
-                new Document("$limit", 5000));
+                        .append("commit_message", "$commits.commit_list.message")));
 
 
-        // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
-        ;
+
         List<Query4v2DTO> query3DTOMongoList = new ArrayList<>();
 
         for (Document doc : result) {
@@ -165,6 +180,7 @@ public class MongoDbReadRepository {
         MongoCollection<Document> collection = database.getCollection("GithubData");
 
         List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("location", "New York")),
                 new Document("$group", new Document("_id", "$location")
                         .append("user_count", new Document("$sum", 1))),
                 new Document("$sort", new Document("user_count", -1)), // Sort by user_count descending
@@ -173,7 +189,7 @@ public class MongoDbReadRepository {
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
-        ;
+
         List<Query5DTO> query3DTOMongoList = new ArrayList<>();
 
         for (Document doc : result) {
@@ -188,22 +204,32 @@ public class MongoDbReadRepository {
     public List<Document> query6() {
         MongoCollection<Document> collection = database.getCollection("GithubData");
 
+
         List<Document> pipeline = Arrays.asList(
-                new Document("$unwind", "$repo_list"),
+                new Document("$match", new Document("id", 176)),
+                // Unwind repo_list array
+        new Document("$unwind", "$repo_list"),
+                // Unwind commit_list array
                 new Document("$unwind", "$commit_list"),
-                new Document("$match", new Document("$expr", new Document("$eq", Arrays.asList("$commit_list.repo_id", "$repo_list.id")))),
-                new Document("$addFields", new Document("commit_list.commit_at_date", new Document("$dateFromString", new Document("dateString", "$commit_list.commit_at")))),
-                new Document("$group", new Document("_id", new Document("user_id", "$user_id")
-                        .append("user_name", "$name")
+                // Match documents to filter out null commit dates
+                new Document("$match", new Document("commit_list.commit_at", new Document("$ne", null))),
+                // Project required fields and convert commit_at to date and truncate to month
+                new Document("$project", new Document("id", 1)
+                        .append("name", 1)
                         .append("repo_id", "$repo_list.id")
                         .append("repo_name", "$repo_list.full_name")
-                        .append("commit_month", new Document("$dateToString", new Document("format", "%Y-%m").append("date", "$commit_list.commit_at_date"))))
+                        .append("commit_month", new Document("$dateTrunc", new Document("date", new Document("$dateFromString", new Document("dateString", "$commit_list.commit_at"))).append("unit", "month")))),
+                // Group by user_id, name, repo_id, repo_name, commit_month and count commits
+                new Document("$group", new Document("_id", new Document("id", "$id")
+                        .append("name", "$name")
+                        .append("repo_id", "$repo_id")
+                        .append("repo_name", "$repo_name")
+                        .append("commit_month", "$commit_month"))
                         .append("commit_count", new Document("$sum", 1))),
-                new Document("$sort", new Document("_id.user_id", 1)
+                // Sort the results by user_id, repo_id, commit_month
+                new Document("$sort", new Document("_id.id", 1)
                         .append("_id.repo_id", 1)
-                        .append("_id.commit_month", 1)),
-                new Document("$limit", 10));
-
+                        .append("_id.commit_month", 1)));
 
         AggregateIterable<Document> result = collection.aggregate(pipeline);
         List<Document> resultList = new ArrayList<>();

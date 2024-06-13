@@ -52,10 +52,14 @@ public class VersionTwoService {
         var teamId1 = postgresWriteRepository.createTeam(dto.getTeam1());
         var teamId2 = postgresWriteRepository.createTeam(dto.getTeam2());
         var gameId = postgresWriteRepository.createGame(dto.getGame(), leagueId, teamId1, teamId2);
-        postgresWriteRepository.createPlayerAppearance(dto.getPlayerAppearance(), gameId, leagueId, playerId);
         postgresWriteRepository.createTeamStat(dto.getTeamStat1(), gameId, teamId1);
         postgresWriteRepository.createTeamStat(dto.getTeamStat1(), gameId, teamId2);
-        postgresWriteRepository.createShot(dto.getShot(), gameId, playerId);
+        for (var playerAppearance: dto.getPlayerAppearance()) {
+            postgresWriteRepository.createPlayerAppearance(playerAppearance, gameId, leagueId, playerId);
+        }
+        for (var playerShot: dto.getShot()) {
+            postgresWriteRepository.createShot(playerShot, gameId, playerId);
+        }
     }
 
     public void write2Postgres(TeamStat teamStat) {

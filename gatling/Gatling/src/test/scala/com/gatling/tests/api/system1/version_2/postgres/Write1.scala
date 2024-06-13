@@ -98,7 +98,7 @@ class Write1 extends Simulation {
     "time": 90,
     "substituteIn": "None",
     "substituteOut": "None"
-  }"""
+  }""".trim
   }
 
   def generateTeamStat(teamId: Int, location: Char): String = {
@@ -138,38 +138,41 @@ class Write1 extends Simulation {
     "xGoal": ${randomDouble(3)},
     "positionX": ${randomDouble(3)},
     "positionY": ${randomDouble(3)}
-  }"""
+  }""".trim
   }
 
   // Main method to assemble the full JSON body
   def generateUpdateBody(): String = {
+    val appearances = (1 to 100).map(_ => generatePlayerAppearance()).mkString("[", ",", "]")
+    val shots = (1 to 100).map(_ => generateShot()).mkString("[", ",", "]")
+
     s"""{
     "league": ${generateLeague()},
     "player": ${generatePlayer()},
     "team1": ${generateTeam("Manchester United")},
     "team2": ${generateTeam("Chelsea")},
     "game": ${generateGame()},
-    "playerAppearance": ${generatePlayerAppearance()},
+    "playerAppearance": $appearances,
     "teamStat1": ${generateTeamStat(1, 'H')},
     "teamStat2": ${generateTeamStat(2, 'A')},
-    "shot": ${generateShot()}
+    "shot": $shots
   }"""
   }
 
   val updateTeamStatScenario: ScenarioBuilder = scenario("Create Player")
-    .repeat(500) {
+    .repeat(10) {
       exec(session => {
         val updateBody = generateUpdateBody()
         Files.write(Paths.get("teamStatsJson.txt"), updateBody.getBytes(StandardCharsets.UTF_8))
         session.set("updateBody", updateBody)
       })
-        .exec(http("Create Player")
+        .exec(http("Create Table new PG")
           .post("/api/v2/game/pg/write-1") // Assuming this is your update endpoint, with teamStatId as a path parameter
           .body(StringBody("${updateBody}")).asJson
           .check(status.is(201)) // Assuming 200 is the status code for successful update
         )
     }
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(20)) // Execute the scenario for one user
+    updateTeamStatScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
   ).protocols(httpProtocol)
 }

@@ -101,7 +101,6 @@ public class MongoDbWriteRepository {
     public void addCommitsToUser(int userId, List<WriteCommitDTO> commits) {
         MongoCollection<Document> collection = database.getCollection("GithubData");
 
-        // Prepare commit documents
         List<Document> commitDocs = new ArrayList<>();
         for (WriteCommitDTO commit : commits) {
             Document commitDoc = new Document("commit_id", commit.getCommitId())
@@ -116,7 +115,6 @@ public class MongoDbWriteRepository {
             commitDocs.add(commitDoc);
         }
 
-        // Single update operation
         collection.updateOne(
                 Filters.eq("id", userId),
                 Updates.set("commit_list", commitDocs)

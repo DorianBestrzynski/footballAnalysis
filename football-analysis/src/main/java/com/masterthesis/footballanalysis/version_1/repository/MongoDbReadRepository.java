@@ -33,8 +33,7 @@ public class MongoDbReadRepository {
                         .append("homeTeamID", 1L)
                         .append("awayTeamID", 1L)
                         .append("homeGoals", 1L)
-                        .append("awayGoals", 1L))
-                .limit(100);
+                        .append("awayGoals", 1L));
 
         List<Query1DTOMongo> query1List = new ArrayList<>();
         for (Document doc : result) {
@@ -78,7 +77,9 @@ public class MongoDbReadRepository {
 
     public List<Query3DTOMongo> query3() {
         MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("playerID", 555)),
+                new Document("$unwind",
                         new Document("path", "$shots")
                                 .append("preserveNullAndEmptyArrays", false)),
                 new Document("$project",
@@ -88,8 +89,7 @@ public class MongoDbReadRepository {
                                 .append("situation", "$shots.situation")
                                 .append("lastAction", "$shots.lastAction")
                                 .append("shotType", "$shots.shotType")
-                                .append("shotResult", "$shots.shotResult")),
-                new Document("$limit", 100000));
+                                .append("shotResult", "$shots.shotResult")));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -112,7 +112,8 @@ public class MongoDbReadRepository {
     public List<Query4DTOMongo> query4() {
         MongoCollection<Document> collection = database.getCollection("Game_Leagues_Teams_TeamStats");
 
-        List<Document> pipeline = Arrays.asList(new Document("$project",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$project",
                         new Document("LeagueName", "$leagueName")
                                 .append("Match",
                                         new Document("$concat", Arrays.asList("$homeTeam.name", " vs ", "$awayTeam.name")))
@@ -120,7 +121,7 @@ public class MongoDbReadRepository {
                                 .append("Shots", "$homeTeam.teamStats.shots_home")),
                 new Document("$sort",
                         new Document("Shots", -1L)),
-                new Document("$limit", 100));
+                new Document("$limit", 10));
 
 
         // Execute the aggregation pipeline
@@ -141,7 +142,8 @@ public class MongoDbReadRepository {
     public List<Query5DTO> query5() {
         MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
 
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$unwind",
                         new Document("path", "$shots")
                                 .append("preserveNullAndEmptyArrays", false)),
                 new Document("$lookup",
@@ -177,7 +179,8 @@ public class MongoDbReadRepository {
     public List<Query6DTO> query6() {
         MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
 
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$unwind",
                         new Document("path", "$appearances")
                                 .append("preserveNullAndEmptyArrays", false)),
                 new Document("$lookup",
@@ -193,7 +196,7 @@ public class MongoDbReadRepository {
                                 .append("season", "$GameAppearances.season")
                                 .append("leagueName", "$GameAppearances.leagueName")
                                 .append("goals", "$appearances.goals")),
-                new Document("$limit", 100000));
+                new Document("$limit", 10));
 
         // Execute the aggregation pipeline
         AggregateIterable<Document> result = collection.aggregate(pipeline);
@@ -215,7 +218,9 @@ public class MongoDbReadRepository {
         MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
 
         // Define your aggregation pipeline
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("playerID", 447)),
+                new Document("$unwind",
                         new Document("path", "$appearances")
                                 .append("preserveNullAndEmptyArrays", false)),
                 new Document("$group",
@@ -259,7 +264,9 @@ public class MongoDbReadRepository {
         MongoCollection<Document> collection = database.getCollection("Game_Leagues_Teams_TeamStats");
 
         // Define your aggregation pipeline
-        List<Document> pipeline = Arrays.asList(new Document("$project",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("gameID", 9887)),
+                new Document("$project",
                         new Document("LeagueName", "$leagueName")
                                 .append("Match",
                                         new Document("$concat", Arrays.asList("$homeTeam.name", " vs ", "$awayTeam.name")))
@@ -354,7 +361,9 @@ public class MongoDbReadRepository {
         MongoCollection<Document> collection = database.getCollection("Player_Appearances_Shots");
 
         // Define your aggregation pipeline
-        List<Document> pipeline = Arrays.asList(new Document("$unwind",
+        List<Document> pipeline = Arrays.asList(
+                new Document("$match", new Document("playerID", 2371)),
+                new Document("$unwind",
                         new Document("path", "$appearances")
                                 .append("preserveNullAndEmptyArrays", false)),
                 new Document("$lookup",

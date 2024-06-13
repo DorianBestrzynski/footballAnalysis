@@ -20,7 +20,7 @@ public class MongoDbConfig {
         var settings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
                 .applyToSocketSettings(builder ->
-                        builder.readTimeout(3, TimeUnit.HOURS)) // example to set socket read timeout
+                        builder.readTimeout(3, TimeUnit.HOURS))
                 .build();
 
         MongoClient mongoClient = MongoClients.create(settings);

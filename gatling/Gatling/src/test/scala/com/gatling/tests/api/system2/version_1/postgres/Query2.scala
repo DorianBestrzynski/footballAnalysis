@@ -27,7 +27,7 @@ class Query2 extends Simulation {
 
   // Actual test scenario
   val testScenario: ScenarioBuilder = scenario("Test Query 2")
-    .repeat(2) { // Repeat the following block 5 times
+    .repeat(5) { // Repeat the following block 5 times
       exec(
         http("Query 2")
           .get("/api/v1/git/pg/query-2")

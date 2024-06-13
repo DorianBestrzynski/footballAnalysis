@@ -2,6 +2,8 @@ package com.masterthesis.footballanalysis.version_2.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class Write1DTO {
     private League league;
@@ -9,8 +11,8 @@ public class Write1DTO {
     private Team team1;
     private Team team2;
     private Game game;
-    private PlayerAppearance playerAppearance;
+    private List<PlayerAppearance> playerAppearance;
     private TeamStat teamStat1;
     private TeamStat teamStat2;
-    private Shot shot;
+    private List<Shot> shot;
 }

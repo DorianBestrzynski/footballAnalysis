@@ -101,6 +101,7 @@ public class PostgresReadRepository {
         String query = "SELECT g.gameId, g.date, g.season, COUNT(s.shotId) AS totalShots, SUM(CASE WHEN s.shotResult = 'Goal' THEN 1 ELSE 0 END) AS goalsScored " +
                 "FROM games g " +
                 "JOIN shots s ON g.gameID = s.gameID " +
+                "WHERE g.gameId = 16129 " +
                 "GROUP BY g.gameID, g.date, g.homeTeamID, g.awayTeamID " +
                 "ORDER BY g.date DESC, goalsScored DESC " +
                 "LIMIT 100 ";
@@ -130,9 +131,9 @@ public class PostgresReadRepository {
                 "JOIN teams at ON at.teamId = g.awayTeamId " +
                 "JOIN team_stats ts_h ON ts_h.gameId = g.gameId AND ts_h.teamId = ht.teamId " +
                 "JOIN team_stats ts_a ON ts_a.gameId = g.gameId AND ts_a.teamId = at.teamId " +
+                "WHERE g.gameId = 16129 " +
                 "GROUP BY g.gameID, g.date, g.season, ht.name, at.name, l.name, ts_h.goals, ts_a.goals, s.minute,s.situation, s.shotResult, p.name, a.goals, a.shots " +
-                "ORDER BY g.date DESC " +
-                "LIMIT 100 ";
+                "ORDER BY g.date DESC ";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> {
             Query6DTOPostgres query6 = new Query6DTOPostgres();

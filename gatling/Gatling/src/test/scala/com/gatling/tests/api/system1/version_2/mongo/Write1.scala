@@ -120,8 +120,8 @@ class Write1 extends Simulation {
   // Main method to generate the full JSON body
   def generateUpdateBody(): String = {
     val gameId = Random.nextInt(100) + 1
-    val appearances = (1 to 2).map(_ => generateAppearance(gameId)).mkString("[", ",", "]")
-    val shots = (1 to 2).map(_ => generateShots(gameId)).mkString("[", ",", "]")
+    val appearances = (1 to 100).map(_ => generateAppearance(gameId)).mkString("[", ",", "]")
+    val shots = (1 to 100).map(_ => generateShots(gameId)).mkString("[", ",", "]")
 
     s"""{
     "gameId": $gameId,
@@ -151,19 +151,19 @@ class Write1 extends Simulation {
   }
 
   val updateTeamStatScenario: ScenarioBuilder = scenario("Create Table")
-    .repeat(500) {
+    .repeat(10) {
       exec(session => {
         val updateBody = generateUpdateBody()
         Files.write(Paths.get("teamStatsJson.txt"), updateBody.getBytes(StandardCharsets.UTF_8))
         session.set("updateBody", updateBody)
       })
-        .exec(http("Create Player")
+        .exec(http("Create Tab;e mmew")
           .post("/api/v2/game/mongo/write-1") // Assuming this is your update endpoint, with teamStatId as a path parameter
           .body(StringBody("${updateBody}")).asJson
           .check(status.is(201)) // Assuming 200 is the status code for successful update
         )
     }
   setUp(
-    updateTeamStatScenario.inject(atOnceUsers(20)) // Execute the scenario for one user
+    updateTeamStatScenario.inject(atOnceUsers(1)) // Execute the scenario for one user
   ).protocols(httpProtocol)
 }
